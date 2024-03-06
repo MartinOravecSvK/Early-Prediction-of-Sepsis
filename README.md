@@ -1,5 +1,9 @@
 # Early-Prediction-of-Sepsis
 
+<details>
+<summary><b>Working with the Conda Environment</b> (click to expand)</summary>
+<br>
+
 ## Setting Up the Conda Environment
 
 This project uses a conda environment to manage dependencies. To set up the environment on your local machine, follow these steps:
@@ -42,7 +46,7 @@ Or, if the package is only available via pip (still check installation guide for
 pip install package-name
 ```
 
-There may be other ways to install a package for example using `conda-forge` so always look for instructions online.
+There may be other ways to install a package for example using `conda-forge`  ( `conda install package -c conda-forge` ) so always look for instructions online.
 
 ### Updating the Environment
 
@@ -65,3 +69,7 @@ conda env update --file environment.yml --prune
 ```
 
 The `--prune` option removes any dependencies that are no longer needed from the environment.
+
+</details>
+
+## DATA

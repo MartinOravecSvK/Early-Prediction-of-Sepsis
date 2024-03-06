@@ -4,4 +4,15 @@ channels:
   - defaults
 dependencies:
   - python=3.11
+  - cudatoolkit
+  - pytorch
+  - torchaudio
+  - torchvision
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - seaborn
 prefix: /home/martin/Downloads/yes/envs/datascience
