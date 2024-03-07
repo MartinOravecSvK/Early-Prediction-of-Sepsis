@@ -70,6 +70,34 @@ conda env update --file environment.yml --prune
 
 The `--prune` option removes any dependencies that are no longer needed from the environment.
 
+### Adding conda environment to JupyterLab
+
+To make your conda environment visible to JupyterLab you need to add your environment by creating a kernel spec:
+
+```bash
+python -m ipykernel install --user --name YourEnvironmentName --display-name "Display Name"
+```
+
+### Running JupyterLab
+
+1. Intall JupyterLab:
+
+```bash
+pip3 install jupyter
+```
+
+2. Navigate to the notebooks directory:
+
+```bash
+cd notebooks
+```
+
+3. Run JupyterLab
+
+```bash
+jupyter lab
+```
+
 </details>
 
 ## DATA
