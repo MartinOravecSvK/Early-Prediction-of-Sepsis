@@ -116,6 +116,10 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
 
 ### Columns in each training data file:
 
+<details>
+<summary><b>Full table of columns with descriptions</b> (click to expand)</summary>
+<br>
+
 | Variable Name       | Description                                                               |
 |---------------------|---------------------------------------------------------------------------|
 **Vital Signs (columns 1-8)**
@@ -163,3 +167,5 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
 | ICULOS              | ICU length-of-stay (hours since ICU admit)                                |
 **Outcome (column 41)**
 | SepsisLabel         | For sepsis patients, SepsisLabel is 1 if t≥tsepsis-6 and 0 if t<tsepsis-6. For non-sepsis patients, SepsisLabel is 0. |
+
+</details>
