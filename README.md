@@ -78,6 +78,26 @@ To make your conda environment visible to JupyterLab you need to add your enviro
 python -m ipykernel install --user --name YourEnvironmentName --display-name "Display Name"
 ```
 
+### Running JupyterLab
+
+1. Intall JupyterLab:
+
+```bash
+pip3 install jupyter
+```
+
+2. Navigate to the notebooks directory:
+
+```bash
+cd notebooks
+```
+
+3. Run JupyterLab
+
+```bash
+jupyter lab
+```
+
 </details>
 
 ## DATA
