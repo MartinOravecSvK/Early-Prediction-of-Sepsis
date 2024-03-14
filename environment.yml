@@ -2,6 +2,8 @@ name: datascience
 channels:
   - conda-forge
   - defaults
+  - nvidia
+  - pytorch
 dependencies:
   - python=3.11
   - cudatoolkit
@@ -9,12 +11,15 @@ dependencies:
   - torchaudio
   - torchvision
   - jupyterlab
-  - matplotlib
   - numpy
   - pandas
   - scikit-learn
   - scipy
   - seaborn
+  - pip
+  - libtiff
+  - matplotlib
+  - pillow
   - pip
   - pip:
     - hypertools
