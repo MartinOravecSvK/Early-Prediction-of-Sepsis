@@ -27,4 +27,8 @@ def get_dataset_as_df():
         print(c, end='\r')
         c += 1
     
-    return data
+    print("Putting data into dataframe...")
+    dataset = pd.concat(data)
+    print("Done")
+
+    return dataset
