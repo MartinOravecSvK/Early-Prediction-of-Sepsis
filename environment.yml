@@ -15,4 +15,7 @@ dependencies:
   - scikit-learn
   - scipy
   - seaborn
+  - pip
+  - pip:
+    - hypertools
 prefix: /home/martin/Downloads/yes/envs/datascience
