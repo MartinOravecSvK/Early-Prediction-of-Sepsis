@@ -23,4 +23,5 @@ dependencies:
   - pip
   - pip:
     - hypertools
+    - ppca
 prefix: /home/martin/Downloads/yes/envs/datascience

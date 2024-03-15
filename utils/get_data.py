@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import hypertools as hyp
 import os
-from copy import copy
+from ppca import PPCA
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -68,14 +68,4 @@ def get_dataset_as_np():
     return dataset
 
 if __name__ == '__main__':
-    data1 = get_dataset_as_np()
-    data2 = copy(data1)
-
-    missing = .1
-    inds = [(i,j) for i in range(data2.shape[0]) for j in range(data2.shape[1])]
-    missing_data = [inds[i] for i in np.random.choice(int(len(inds)), int(len(inds)*missing))]
-    for i,j in missing_data:
-        data2[i,j]=np.nan
-
-    # plot
-    hyp.plot([data1, data2], linestyle=['-',':'], legend=['Original', 'PPCA'])
+    data1 = get_dataset_as_df()
