@@ -174,6 +174,38 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
 <summary><b>Challange References:</b> (click to expand)</summary>
 <br>
 
+1. **The Signature-Based Model for Early Detection of Sepsis From Electronic Health Records in the Intensive Care Unit**
+
+   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-014.pdf)
+
+   - **Team**: James Morrill, Andrey Kormilitzin, Alejo Nevado-Holgado, Sumanth Swaminathan, Sam Howison, Terry Lyons (University of Oxford, Iterex Therapeutics)
+   - **Abstract**: Introduced a signature-based regression model for sepsis detection from ICU patient data, achieving the highest utility function score (0.360) and ranking 1st in the PhysioNet Challenge 2019. The model utilizes gradient boosting machines and signature features from patient time-series data to predict sepsis risk at every time interval post-admission.
+
+   #### What the Team Did
+
+   - Developed a new machine learning approach using signature transformation to extract features from time-series physiological data of ICU patients, enhancing prediction accuracy for sepsis onset.
+   - Implemented a gradient boosting machine algorithm that leverages both current time-point data and extracted signature features to model sepsis effects longitudinally.
+   - Conducted a detailed analysis of various feature sets, including hand-crafted features and signature transformations, to evaluate their predictive power and impact on model performance.
+   - Employed stratified 5-fold cross-validation and light gbm for model training and validation, optimizing for a utility score that considers the trade-offs between true positives, false positives, and timely prediction.
+
+   #### What They Found Useful
+
+   - Signature features significantly improved model performance by providing a comprehensive summary of longitudinal physiological measurements, distinguishing between septic and non-septic cases effectively.
+   - The inclusion of hand-crafted features, such as ShockIndex and BUN/CR ratios, alongside signature transformations, showcased a systematic improvement in predicting sepsis risk.
+   - The model achieved an AUC ROC of 0.868, demonstrating its efficacy in screening for sepsis risk with the ability to predict sepsis cases correctly in 65.3% of instances, often well before the onset.
+
+   #### Challenges and Limitations
+
+   - Despite the model's high utility score and AUC ROC, achieving the desired balance between sensitivity and specificity for clinical application remains a challenge, particularly in predicting sepsis within the crucial 6-hour window prior to onset.
+   - The study focuses on the utility function optimization, which might not fully encapsulate the clinical nuances of sepsis prediction and management within the ICU setting.
+
+   #### Future Directions
+
+   - Explore the potential of signature-based models in other clinical prediction tasks, leveraging the method's ability to process complex time-series data effectively.
+   - Investigate the integration of more diverse data sources and feature engineering techniques to further enhance the predictive accuracy and timeliness of sepsis detection.
+   - Evaluate the model's performance in a real-world clinical setting, focusing on its utility as a decision-support tool for healthcare professionals in the intensive care unit.
+
+
 6. **Early Prediction of Sepsis Using Gradient Boosting Decision Trees with Optimal Sample Weighting**
 
    [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-459.pdf)
