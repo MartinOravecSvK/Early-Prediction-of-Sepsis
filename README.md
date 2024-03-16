@@ -170,4 +170,41 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
 
 </details>
 
+<details>
+<summary><b>Challange References:</b> (click to expand)</summary>
+<br>
+
+6. **Early Prediction of Sepsis Using Gradient Boosting Decision Trees with Optimal Sample Weighting**
+
+   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-459.pdf)
+
+   - **Team**: Ibrahim Hammoud, IV Ramakrishnan, Mark Henry (Stony Brook University)
+   - **Abstract**: The team developed a model for early sepsis prediction using an ensemble of gradient boosting decision trees, trained with weighted binary cross-entropy loss. The model uses a fixed-size feature vector from the last 20 hours of patient data, with imputation mimicking real-time healthcare information. The model was tuned and evaluated through 5-fold cross-validation, achieving a 6th rank out of 78 in the PhysioNet/Computing in Cardiology Challenge 2019.
+
+   #### What the Team Did
+
+   - Proposed a method to train an ensemble of gradient boosting decision trees for early sepsis prediction, focusing on a weighted binary cross-entropy loss to handle the unique challenges of sepsis data.
+   - Developed a fixed-size feature vector based on the last 20 hours of data for each patient, incorporating a real-time imputation scheme that simulates the information available to healthcare professionals.
+   - Employed 5-fold cross-validation for hyper-parameter tuning and model evaluation, aiming for the maximum utility score on the training set to guide the selection of the evaluation set threshold.
+
+   #### What They Found Useful
+
+   - The use of weighted binary cross-entropy loss was pivotal in handling the imbalance and specificity of the sepsis prediction challenge, allowing for the efficient training of the model.
+   - Real-time imputation and fixed-size feature vectors were effective in mimicking the decision-making environment of healthcare professionals, providing a more realistic basis for the model's predictions.
+   - Early prediction of sepsis showed potential for significant impact, with the model achieving a notable rank in the challenge, demonstrating the viability of gradient boosting decision trees for this application.
+
+   #### Challenges and Limitations
+
+   - The fixed-size window of 20 hours for feature vectors, while computationally necessary, might have limited the model's ability to utilize more extended historical data potentially beneficial for prediction accuracy.
+   - Despite achieving a high rank, the model encountered challenges with a high false positive rate and variance in score distribution among positive patients, indicating room for optimization in threshold setting and score calibration.
+   - The heavy reliance on the challenge's utility function for model training and evaluation may have introduced biases or artifacts in prediction behavior, emphasizing the need for further exploration of alternative metrics and methods.
+
+   #### Future Directions
+
+   - Investigating sequence models like LSTMs for their potential to incorporate both short-term and long-term information from real-time signals, addressing the limitations of fixed-size feature vectors.
+   - Exploring alternative metrics, scoring functions, and models to improve early prediction tasks, aiming to optimize real-time prediction settings more effectively.
+   - Continued examination of the impacts of utility functions on model outputs and prediction timing to refine and enhance early sepsis prediction approaches.
+
+</details>
+
 Using [Hypertools](https://hypertools.readthedocs.io/en/latest/auto_examples/plot_PPCA.html).
