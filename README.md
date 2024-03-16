@@ -205,6 +205,10 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
    - Investigate the integration of more diverse data sources and feature engineering techniques to further enhance the predictive accuracy and timeliness of sepsis detection.
    - Evaluate the model's performance in a real-world clinical setting, focusing on its utility as a decision-support tool for healthcare professionals in the intensive care unit.
 
+5. ****
+   
+   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-280.pdf)
+
 
 6. **Early Prediction of Sepsis Using Gradient Boosting Decision Trees with Optimal Sample Weighting**
 
