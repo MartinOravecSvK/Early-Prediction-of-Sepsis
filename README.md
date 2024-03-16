@@ -237,6 +237,42 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
    - Exploring alternative metrics, scoring functions, and models to improve early prediction tasks, aiming to optimize real-time prediction settings more effectively.
    - Continued examination of the impacts of utility functions on model outputs and prediction timing to refine and enhance early sepsis prediction approaches.
 
+   ### Notable Mention:
+
+   ### Time-Specific Metalearners for the Early Prediction of Sepsis
+
+   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-029.pdf)
+
+   - **Team**: Marcus Vollmer, Christian F Luz, Philipp Sodmann, Bhanu Sinha, Sven-Olaf Kuhn (University Medicine Greifswald, University of Groningen, University Medical Center Groningen)
+   - **Abstract**: Proposed a novel approach to predict sepsis 6 hours prior to onset using time-specific stacked ensembles and a non-specific XGBoost model, trained on ICU data from the 2019 PhysioNet Challenge. Despite the challenges of imprecise and incomplete data, the models demonstrated potential in sepsis prediction with a normalized utility score of 0.394 for the XGBoost model.
+
+   #### What the Team Did
+
+   - Developed time-specific metalearners and a general XGBoost model to predict sepsis in ICU patients 6 hours before onset, leveraging a dataset of 40,336 ICU stays.
+   - Employed extensive data cleaning, feature engineering, and rolling window techniques to build robust features from clinical scores (e.g., SOFA, qSOFA, SIRS) and physiological data.
+   - Evaluated model performance using task-specific utility functions and assessed variable importance to identify key predictors of sepsis.
+   - Conducted a triple data split for training, validation, and testing, optimizing model parameters and threshold selection for binary classification (sepsis/no sepsis).
+
+   #### What They Found Useful
+
+   - Time-specific metalearners allowed for nuanced prediction by adapting to the dynamic clinical landscape and varying sepsis prevalence throughout ICU stays.
+   - Feature engineering, particularly the generation of rolling window features and clinical scores, proved crucial in capturing the temporal dynamics of sepsis.
+   - The non-specific XGBoost model achieved a notable utility score, demonstrating the effectiveness of machine learning techniques over traditional clinical scores for sepsis prediction.
+   - Variables such as ventilation status, white blood cell count, and partial thromboplastin time emerged as significant predictors, highlighting their clinical relevance in early sepsis detection.
+
+   #### Challenges and Limitations
+
+   - Handling the imprecision and incompleteness of ICU data posed significant challenges, necessitating sophisticated data cleaning and imputation strategies.
+   - Time-specific metalearners, while promising, exhibited limitations in threshold selection, affecting their overall performance compared to the non-specific model.
+   - The study did not participate in the official PhysioNet Challenge, limiting external validation and comparison with other state-of-the-art models.
+
+   #### Future Directions
+
+   - Further research is needed to refine time-specific metalearning approaches, possibly by incorporating more granular temporal analysis and advanced feature engineering techniques.
+   - Exploring the integration of additional data sources, such as genetic or immunological markers, could enhance model sensitivity and specificity for sepsis prediction.
+   - Deployment and real-world validation of these models in ICU settings are essential steps toward assessing their clinical utility and impact on patient outcomes.
+
+
 </details>
 
 Using [Hypertools](https://hypertools.readthedocs.io/en/latest/auto_examples/plot_PPCA.html).
