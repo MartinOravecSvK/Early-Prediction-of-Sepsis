@@ -205,6 +205,40 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
    - Investigate the integration of more diverse data sources and feature engineering techniques to further enhance the predictive accuracy and timeliness of sepsis detection.
    - Evaluate the model's performance in a real-world clinical setting, focusing on its utility as a decision-support tool for healthcare professionals in the intensive care unit.
 
+2. **A Multi-Task Imputation and Classification Neural Architecture for Early Prediction of Sepsis from Multivariate Clinical Time Series**
+
+   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-110.pdf)
+
+   - **Team**: Yale Chang, Jonathan Rubin, Gregory Boverman, Shruti Vij, Asif Rahman, Annamalai Natarajan, Saman Parvaneh (Philips Research North America, Cambridge, USA)
+   - **Abstract**: This work focuses on early sepsis prediction using multivariate clinical time series data. The authors employed a recurrent imputation model (RITS) for handling missing data, followed by a Temporal Convolutional Network (TCN) for prediction. A custom time-dependent weighting approach for error types in the loss function was applied. The model achieved a utility score of 0.328 in the PhysioNet Computing in Cardiology Challenge 2019, placing 9th, and an improved version later reached a utility score of 0.342 in a follow-up event, securing 2nd place.
+
+   #### What the Team Did
+
+   - Developed a multi-task neural architecture combining recurrent imputation for time series (RITS) with Temporal Convolutional Networks (TCN) for early detection of sepsis.
+   - Introduced a novel set of features that model the missingness in clinical data, enhancing the prediction model's accuracy.
+   - Employed a custom-designed loss function incorporating time-dependent weights to manage different error types, effectively balancing the trade-offs between early, on-time, and late predictions of sepsis.
+   - Conducted experiments on a real-world dataset provided by the PhysioNet/Computing in Cardiology Challenge 2019, demonstrating the proposed model's effectiveness in sepsis prediction.
+
+   #### What They Found Useful
+
+   - The RITS approach for imputing missing values significantly outperformed traditional imputation methods, providing a strong foundation for accurate sepsis prediction.
+   - The TCN model was chosen for its efficiency in handling long historical sequences and its ability to make predictions at any point during the ICU stay without future data leakage.
+   - The custom loss function tailored for the sepsis prediction task played a crucial role in optimizing the model's performance, particularly in minimizing the penalties associated with too early or too late predictions.
+   - The combination of RITS-imputed data with TCN, augmented by missingness indicator variables, proved to be highly effective, outperforming other sequence prediction models.
+
+   #### Challenges and Limitations
+
+   - Handling irregularly sampled and missing data points in multivariate clinical time series posed significant challenges, addressed through the RITS model.
+   - Balancing predictions to avoid too early or too late detection of sepsis required careful tuning of the loss function, highlighting the complexity of modeling clinical decision-making processes.
+   - The variance in test utility scores across different folds indicated the need for ensemble models to improve prediction reliability and reduce variance.
+
+   #### Future Directions
+
+   - Further exploration of ensemble models could potentially lead to higher test utility scores by incorporating a greater variety of prediction models and increasing the number of RITS-TCN models.
+   - Investigating model interpretation techniques, especially for black-box models like RITS and TCN, would be valuable for integrating these models into clinical workflows more effectively.
+   - Continuous refinement of the loss function to better align with clinical needs and enhance the practical applicability of sepsis prediction models in real-world settings.
+
+
 3. **Sepsis Prediction in Intensive Care Unit Using Ensemble of XGboost Models**
 
    [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-238.pdf)
