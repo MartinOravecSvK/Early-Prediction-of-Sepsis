@@ -37,39 +37,66 @@ def get_dataset_as_df():
     
     print("Putting data into dataframe...")
     # dataset = pd.concat(data)
-    dataset = []
+    dataset = pd.concat(data)
     print("Done")
 
     return dataset
 
-def get_dataset_as_np():
+def get_dataset_as_np(include_strings=False):
     data = []
     c = 0
-    DATA_PATH = get_dataset_abspath()  # Make sure this function is defined somewhere in your code
+    DATA_PATH = get_dataset_abspath()  # Ensure this function is defined and returns the correct path
     file_listA = os.listdir(DATA_PATH + 'training_setA/')
     file_listB = os.listdir(DATA_PATH + 'training_setB/')
 
     for file in file_listA:
-        data.append(pd.read_csv(DATA_PATH + 'training_setA/' + file))
+        df = pd.read_csv(DATA_PATH + 'training_setA/' + file, na_values=['NA', 'na', ''])
+        data.append(df)
         print("  ", c, end='\r')
         c += 1
-    print("  ", c)
+
     for file in file_listB:
-        data.append(pd.read_csv(DATA_PATH + 'training_setB/' + file))
+        df = pd.read_csv(DATA_PATH + 'training_setB/' + file, na_values=['NA', 'na', ''])
+        data.append(df)
         print("  ", c, end='\r')
         c += 1
     print("  ", c)
 
-    # Concatenate all DataFrames in the list into a single DataFrame
-    # dataset = pd.concat(data, ignore_index=True)
+    print("Combining data into a single DataFrame and converting to numpy array...")
+    # print(data.shape)
+    combined_df = pd.concat(data)
+    print(combined_df.shape)
+    # Ensure the data is numeric and convert to float
+    numeric_df = combined_df.apply(pd.to_numeric, errors='coerce')
+    dataset = numeric_df.astype(float).to_numpy()
 
-    print("Putting data into numpy array...")
-    dataset = np.empty(len(data), dtype=object)
-    for i in range(len(data)):
-        dataset[i] = np.array(data[i])
+    if not include_strings:
+        dataset = preprocess_no_strings(combined_df)
+
     print("Done")
-
     return dataset
+
+def preprocess_no_strings(df):
+    """
+    Preprocess the given DataFrame by removing non-numeric columns and 
+    converting the result to a NumPy array of floats.
+    
+    Parameters:
+    - df: pandas DataFrame containing the dataset to preprocess.
+
+    Returns:
+    - A NumPy array containing only the numeric data from the input DataFrame.
+    """
+    print("Filtering only numeric data columns...")
+    # Select columns with dtype 'number', which includes int and float but excludes object/string types
+    # print(df.shape)
+    numeric_df = df.select_dtypes(include=['number'])
+    # print(numeric_df.shape)
+    print("Converting to numpy array...")
+    numeric_array = numeric_df.astype(float).to_numpy()
+
+    print("Preprocessing complete.")
+    return numeric_array
 
 def plot_loadings(loadings, feature_names, pc1=0, pc2=1):
     """
@@ -99,28 +126,4 @@ def plot_loadings(loadings, feature_names, pc1=0, pc2=1):
     plt.show()
 
 if __name__ == '__main__':
-    dataset = get_dataset_as_np()  # Get the dataset
-
-    ppca = PPCA()
-    ppca.fit(data=dataset, d=2, verbose=True)  # Fit PPCA, d is the target dimensionality
-
-    # The 'W' matrix contains the loadings for the principal components
-    loadings = ppca.W
-    print("Loadings (W matrix):\n", loadings)
-
-    # To understand the contribution of each original feature to the principal components,
-    # you can examine the absolute values of the loadings. Higher values indicate a stronger
-    # contribution of that feature to the component.
-    print("Absolute loadings:\n", np.abs(loadings))
-
-    # If you want to rank features by their contribution to a specific component, you can do so:
-    component_number = 0  # Change this based on the component you're interested in
-    feature_importance = np.abs(loadings[:, component_number])
-    feature_ranking = np.argsort(feature_importance)[::-1]
-
-    print(f"Feature importance ranking for component {component_number}:\n", feature_ranking)
-
-    feature_names = ['Feature1', 'Feature2', 'Feature3', ...]  # Fill this with your actual feature names
-    
-    # Plotting the loadings
-    plot_loadings(ppca.W, feature_names)
+    print("Testing get_dataset_as_df...")
