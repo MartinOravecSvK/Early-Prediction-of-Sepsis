@@ -205,10 +205,71 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
    - Investigate the integration of more diverse data sources and feature engineering techniques to further enhance the predictive accuracy and timeliness of sepsis detection.
    - Evaluate the model's performance in a real-world clinical setting, focusing on its utility as a decision-support tool for healthcare professionals in the intensive care unit.
 
-5. ****
+3. **Sepsis Prediction in Intensive Care Unit Using Ensemble of XGboost Models**
+
+   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-238.pdf)
+
+   - **Team**: Morteza Zabihi, Serkan Kiranyaz, Moncef Gabbouj (Tampere University, Finland, and Qatar University, Qatar)
+   - **Abstract**: This study addresses the challenge of early sepsis prediction in ICU patients by leveraging an ensemble of XGboost models. A novel feature set including patterns of missing values is proposed, which significantly contributes to the predictive performance. The methodology achieved third place in the PhysioNet/Computing in Cardiology Challenge 2019, demonstrating its effectiveness with an overall utility score of 0.339.
+
+   #### What the Team Did
+
+   - Developed an ensemble learning approach using five XGboost models for early sepsis prediction, focusing on ICU patients' clinical data.
+   - Extracted 407 features from clinical data, including vital signs, demographic variables, and laboratory values, with a particular emphasis on modeling missingness.
+   - Employed a wrapper feature selection algorithm to identify the most clinically relevant features, considering both present and missing data.
+   - Achieved robust performance across different hospital datasets, officially ranking as the third team in the PhysioNet Challenge with a utility score of 0.339.
+
+   #### What They Found Useful
+
+   - The introduction of discriminative features to model the patterns of missing values in clinical data, acknowledging that missingness may carry informative signals for sepsis prediction.
+   - A comprehensive feature engineering strategy that extracted a wide range of features, including both sliding-window and non-sliding-window based features, to capture the dynamic nature of sepsis.
+   - The ensemble approach, combining multiple XGboost models, enhanced the robustness and accuracy of sepsis prediction, outperforming traditional clinical criteria.
+   - The study identified that variables related to hospital administration time, temperature, heart rate, and blood pressure were among the top predictors of sepsis, underscoring the clinical relevance of the selected features.
+
+   #### Challenges and Limitations
+
+   - The presence of significant class imbalance between sepsis and non-sepsis observations required careful data balancing techniques to train effective models.
+   - Performance variability across different hospital datasets highlighted the challenge of generalizing the predictive model, with a noticeable drop in performance on one of the test sets.
+   - The reliance on sophisticated machine learning models and extensive feature engineering may limit the interpretability of the predictive process, an essential aspect for clinical adoption.
+
+   #### Future Directions
+
+   - Further exploration of the role of missing data in clinical prediction models, specifically investigating the informative nature of missingness across various medical conditions.
+   - Enhancement of the ensemble model by incorporating advanced machine learning techniques and exploring alternative ensemble strategies to improve prediction accuracy and generalizability.
+   - Clinical validation and integration of the proposed predictive model into ICU workflows, aiming to assess its impact on clinical outcomes and sepsis management strategies.
+
+5. **Utilizing Informative Missingness for Early Prediction of Sepsis**
    
    [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-280.pdf)
 
+   - **Team**: Janmajay Singh, Kentaro Oshiro, Raghava Krishnan, Masahiro Sato, Tomoko Ohkuma, Noriji Kato (Fuji Xerox Co, Ltd, Yokohama, Japan)
+   - **Abstract**: This study presents a novel approach to predict sepsis early in ICU patients by leveraging patterns in the missingness of physiological variables. The research introduces an XGBoost model that incorporates informative missingness, resulting in a utility score of 0.337 and securing a 5th place ranking in the challenge.
+
+   #### What the Team Did
+
+   - Developed an XGBoost model for early sepsis prediction, emphasizing the role of informative missingness in physiological data.
+   - Explored various model variations with adjustments in hyperparameters, window sizes, and imputation methods to enhance prediction accuracy.
+   - Implemented a strategy to represent the missingness of features through masking vectors, aligning with patterns observed in sepsis versus non-sepsis patients.
+   - Shifted the sepsis labels to earlier time steps and fine-tuned the classification probability threshold to maximize the utility score.
+
+   #### What They Found Useful
+
+   - Analyzing the missingness patterns (informative missingness) in the data provided critical insights, revealing that certain variables exhibited different observation rates between sepsis and non-sepsis patients.
+   - The non-imputation approach, combined with the use of masking vectors for all temporal variables, significantly improved the model's performance.
+   - Shifting the sepsis labels to encourage the model to predict sepsis earlier than the actual onset time proved to be an effective strategy for improving utility scores.
+   - The best-performing model, which included informative missingness and label shifting, achieved a utility score of 0.337 on the full test set, indicating its potential for early sepsis prediction in clinical settings.
+
+   #### Challenges and Limitations
+
+   - Dealing with a significant class imbalance and the inherent challenges of predicting sepsis, which affects a relatively small percentage of ICU patients.
+   - The need to balance between false positives and true positives, especially given the high stakes of early sepsis prediction in terms of patient outcomes.
+   - The approach's reliance on the specific characteristics of the dataset, which may limit its generalizability to other clinical settings or patient populations.
+
+   #### Future Directions
+
+   - Further research into the implications of informative missingness across different medical conditions and datasets to validate the approach's efficacy beyond sepsis prediction.
+   - Exploration of sequence learning models that can inherently handle temporal data and missing values to possibly improve prediction accuracy.
+   - Real-world implementation and validation of the model in clinical settings to assess its practical utility and impact on patient care and outcomes.
 
 6. **Early Prediction of Sepsis Using Gradient Boosting Decision Trees with Optimal Sample Weighting**
 
