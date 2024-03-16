@@ -170,3 +170,4 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
 
 </details>
 
+Using [Hypertools](https://hypertools.readthedocs.io/en/latest/auto_examples/plot_PPCA.html).

@@ -1,4 +1,12 @@
+import pandas as pd
+import numpy as np
+import hypertools as hyp
 import os
+import matplotlib.pyplot as plt
+from ppca import PPCA
+
+import warnings
+warnings.filterwarnings("ignore")
 
 # Returns the absolute path of the dataset directory.
 def get_dataset_abspath():
@@ -8,3 +16,114 @@ def get_dataset_abspath():
     DATA_PATH = parent_dir + '/Dataset/'
 
     return DATA_PATH
+
+def get_dataset_as_df():
+    data = []
+    c = 0
+    DATA_PATH = get_dataset_abspath()
+    file_listA = os.listdir(DATA_PATH + 'training_setA/')
+    file_listB = os.listdir(DATA_PATH + 'training_setB/')
+
+    for file in file_listA:
+        data.append(pd.read_csv(DATA_PATH + 'training_setA/' + file))
+        print("  ", c, end='\r')
+        c += 1
+    print("  ", c)
+    for file in file_listB:
+        data.append(pd.read_csv(DATA_PATH + 'training_setB/' + file))
+        print("  ", c, end='\r')
+        c += 1
+    print("  ", c)
+    
+    print("Putting data into dataframe...")
+    # dataset = pd.concat(data)
+    dataset = pd.concat(data)
+    print("Done")
+
+    return dataset
+
+def get_dataset_as_np(include_strings=False):
+    data = []
+    c = 0
+    DATA_PATH = get_dataset_abspath()  # Ensure this function is defined and returns the correct path
+    file_listA = os.listdir(DATA_PATH + 'training_setA/')
+    file_listB = os.listdir(DATA_PATH + 'training_setB/')
+
+    for file in file_listA:
+        df = pd.read_csv(DATA_PATH + 'training_setA/' + file, na_values=['NA', 'na', ''])
+        data.append(df)
+        print("  ", c, end='\r')
+        c += 1
+
+    for file in file_listB:
+        df = pd.read_csv(DATA_PATH + 'training_setB/' + file, na_values=['NA', 'na', ''])
+        data.append(df)
+        print("  ", c, end='\r')
+        c += 1
+    print("  ", c)
+
+    print("Combining data into a single DataFrame and converting to numpy array...")
+    # print(data.shape)
+    combined_df = pd.concat(data)
+    print(combined_df.shape)
+    # Ensure the data is numeric and convert to float
+    numeric_df = combined_df.apply(pd.to_numeric, errors='coerce')
+    dataset = numeric_df.astype(float).to_numpy()
+
+    if not include_strings:
+        dataset = preprocess_no_strings(combined_df)
+
+    print("Done")
+    return dataset
+
+def preprocess_no_strings(df):
+    """
+    Preprocess the given DataFrame by removing non-numeric columns and 
+    converting the result to a NumPy array of floats.
+    
+    Parameters:
+    - df: pandas DataFrame containing the dataset to preprocess.
+
+    Returns:
+    - A NumPy array containing only the numeric data from the input DataFrame.
+    """
+    print("Filtering only numeric data columns...")
+    # Select columns with dtype 'number', which includes int and float but excludes object/string types
+    # print(df.shape)
+    numeric_df = df.select_dtypes(include=['number'])
+    # print(numeric_df.shape)
+    print("Converting to numpy array...")
+    numeric_array = numeric_df.astype(float).to_numpy()
+
+    print("Preprocessing complete.")
+    return numeric_array
+
+def plot_loadings(loadings, feature_names, pc1=0, pc2=1):
+    """
+    Plot the loadings for the principal components.
+
+    Parameters:
+    - loadings: The loadings matrix from PPCA.
+    - feature_names: A list of names corresponding to the features.
+    - pc1: Index of the first principal component to plot.
+    - pc2: Index of the second principal component to plot.
+    """
+    fig, ax = plt.subplots(figsize=(10, 7))
+    
+    # Plot each loading vector. You can also annotate it with the feature name.
+    for i, feature in enumerate(feature_names):
+        ax.arrow(0, 0, loadings[i, pc1], loadings[i, pc2], head_width=0.02, head_length=0.03, fc='r', ec='r')
+        ax.text(loadings[i, pc1]* 1.15, loadings[i, pc2] * 1.15, feature, color='green', ha='center', va='center')
+
+    plt.xlabel(f'PC{pc1+1}')
+    plt.ylabel(f'PC{pc2+1}')
+    plt.title('Feature contributions to the Principal Components')
+    plt.grid(True)
+    plt.axhline(0, color='black',linewidth=0.5)
+    plt.axvline(0, color='black',linewidth=0.5)
+    plt.xlim(-1, 1)
+    plt.ylim(-1, 1)
+    plt.show()
+
+if __name__ == '__main__':
+    print("Testing get_dataset_as_df...")
