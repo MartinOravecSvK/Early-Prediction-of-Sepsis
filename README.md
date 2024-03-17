@@ -1,5 +1,7 @@
 # Early-Prediction-of-Sepsis
 
+#### Challenge References can be found in [challenge_papers](./challenge_papers/README.md)
+
 <details>
 <summary><b>Working with the Conda Environment</b> (click to expand)</summary>
 <br>
@@ -170,4 +172,4 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
 
 </details>
 
-Using [Hypertools](https://hypertools.readthedocs.io/en/latest/auto_examples/plot_PPCA.html).
+<!-- Using [Hypertools](https://hypertools.readthedocs.io/en/latest/auto_examples/plot_PPCA.html). -->
