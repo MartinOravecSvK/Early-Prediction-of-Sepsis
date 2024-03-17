@@ -4,7 +4,8 @@
 <summary><b>1. The Signature-Based Model for Early Detection of Sepsis From Electronic Health Records in the Intensive Care Unit</b></summary>
 <br>
 
-   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-014.pdf)
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-014.pdf)
+[Local Reference](./CinC2019-014.pdf)
 
    - **Team**: James Morrill, Andrey Kormilitzin, Alejo Nevado-Holgado, Sumanth Swaminathan, Sam Howison, Terry Lyons (University of Oxford, Iterex Therapeutics)
    - **Abstract**: Introduced a signature-based regression model for sepsis detection from ICU patient data, achieving the highest utility function score (0.360) and ranking 1st in the PhysioNet Challenge 2019. The model utilizes gradient boosting machines and signature features from patient time-series data to predict sepsis risk at every time interval post-admission.
@@ -39,7 +40,8 @@
 <summary><b>2. A Multi-Task Imputation and Classification Neural Architecture for Early Prediction of Sepsis from Multivariate Clinical Time Series</b></summary>
 <br>
 
-   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-110.pdf)
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-110.pdf)
+[Local Reference](./CinC2019-110.pdf)
 
    - **Team**: Yale Chang, Jonathan Rubin, Gregory Boverman, Shruti Vij, Asif Rahman, Annamalai Natarajan, Saman Parvaneh (Philips Research North America, Cambridge, USA)
    - **Abstract**: This work focuses on early sepsis prediction using multivariate clinical time series data. The authors employed a recurrent imputation model (RITS) for handling missing data, followed by a Temporal Convolutional Network (TCN) for prediction. A custom time-dependent weighting approach for error types in the loss function was applied. The model achieved a utility score of 0.328 in the PhysioNet Computing in Cardiology Challenge 2019, placing 9th, and an improved version later reached a utility score of 0.342 in a follow-up event, securing 2nd place.
@@ -76,7 +78,8 @@
 <summary><b>3. Sepsis Prediction in Intensive Care Unit Using Ensemble of XGboost Models</b></summary>
 <br>
 
-   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-238.pdf)
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-238.pdf)
+[Local Reference](./CinC2019-238.pdf)
 
    - **Team**: Morteza Zabihi, Serkan Kiranyaz, Moncef Gabbouj (Tampere University, Finland, and Qatar University, Qatar)
    - **Abstract**: This study addresses the challenge of early sepsis prediction in ICU patients by leveraging an ensemble of XGboost models. A novel feature set including patterns of missing values is proposed, which significantly contributes to the predictive performance. The methodology achieved third place in the PhysioNet/Computing in Cardiology Challenge 2019, demonstrating its effectiveness with an overall utility score of 0.339.
@@ -113,7 +116,8 @@
 <summary><b>4. TASP: A Time-Phased Model for Sepsis Prediction</b></summary>
 <br>
 
-   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-049.pdf)
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-049.pdf)
+[Local Reference](./CinC2019-049.pdf)
 
    - **Team**: Xiang Li, Yanni Kang, Xiaoyu Jia, Junmei Wang, Guotong Xie (Ping An Technology, Beijing, China)
    - **Abstract**: The Time-phAsed model for Sepsis Prediction (TASP) is introduced, leveraging the time-dependent nature of sepsis incidence in ICU patients. TASP integrates multiple modeling frameworks corresponding to different ICU stay phases: early, middle, and late stages, employing gradient boosting trees and deep learning to accommodate varying feature sets and missing value imputations tailored to each phase. This model scored 0.415 in cross-validation on the training set and ranked 4th with a score of 0.337 on the full test set of the Physionet/Computing in Cardiology Challenge 2019.
@@ -142,7 +146,8 @@
 <summary><b>5. Utilizing Informative Missingness for Early Prediction of Sepsis</b></summary>
 <br>
 
-   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-280.pdf)
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-280.pdf)
+[Local Reference](./CinC2019-280.pdf)
 
    - **Team**: Janmajay Singh, Kentaro Oshiro, Raghava Krishnan, Masahiro Sato, Tomoko Ohkuma, Noriji Kato (Fuji Xerox Co, Ltd, Yokohama, Japan)
    - **Abstract**: This study presents a novel approach to predict sepsis early in ICU patients by leveraging patterns in the missingness of physiological variables. The research introduces an XGBoost model that incorporates informative missingness, resulting in a utility score of 0.337 and securing a 5th place ranking in the challenge.
@@ -179,7 +184,8 @@
 <summary><b>6. Early Prediction of Sepsis Using Gradient Boosting Decision Trees with Optimal Sample Weighting</b></summary>
 <br>
 
-   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-459.pdf)
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-459.pdf)
+[Local Reference](./CinC2019-459.pdf)
 
    - **Team**: Ibrahim Hammoud, IV Ramakrishnan, Mark Henry (Stony Brook University)
    - **Abstract**: The team developed a model for early sepsis prediction using an ensemble of gradient boosting decision trees, trained with weighted binary cross-entropy loss. The model uses a fixed-size feature vector from the last 20 hours of patient data, with imputation mimicking real-time healthcare information. The model was tuned and evaluated through 5-fold cross-validation, achieving a 6th rank out of 78 in the PhysioNet/Computing in Cardiology Challenge 2019.
@@ -216,6 +222,9 @@
 <summary><b>Early Prediction of Sepsis Using Multi-Feature Fusion Based XGBoost Learning and Bayesian Optimization</b></summary>
 <br>
 
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-020.pdf)
+[Local Reference](./CinC2019-020.pdf)
+
    - **Team**: Meicheng Yang, Xingyao Wang, Hongxiang Gao, Yuwen Li, Xing Liu, Jianqing Li*, Chengyu Liu* (Southeast University, Nanjing, China, and Central South University, Changsha, China)
    - **Abstract**: This study develops an XGBoost-based algorithm for sepsis prediction utilizing multi-feature fusion and Bayesian optimization. The model processes 37 clinical variates after preprocessing, including missing value indicators, scoring quantified features, and time series features, for a total of 168 features. Evaluated on the PhysioNet/Computing in Cardiology Challenge 2019 data, the algorithm demonstrated superior performance, achieving a final Unormalized score (U-Score) of 0.364, the highest unofficial score across 24,819 ICU patients from three hospital systems.
 
@@ -243,7 +252,8 @@
 <summary><b>Time-Specific Metalearners for the Early Prediction of Sepsis</b></summary>
 <br>
 
-   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-029.pdf)
+[Challenge Paper Link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-029.pdf)
+[Local Reference](./CinC2019-029.pdf)
 
    - **Team**: Marcus Vollmer, Christian F Luz, Philipp Sodmann, Bhanu Sinha, Sven-Olaf Kuhn (University Medicine Greifswald, University of Groningen, University Medical Center Groningen)
    - **Abstract**: Proposed a novel approach to predict sepsis 6 hours prior to onset using time-specific stacked ensembles and a non-specific XGBoost model, trained on ICU data from the 2019 PhysioNet Challenge. Despite the challenges of imprecise and incomplete data, the models demonstrated potential in sepsis prediction with a normalized utility score of 0.394 for the XGBoost model.
