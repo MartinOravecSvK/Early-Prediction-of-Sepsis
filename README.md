@@ -3,10 +3,8 @@
 #### Challenge References can be found in [challenge_papers](./challenge_papers/README.md)
 
 <details>
-<summary><b>Working with the Conda Environment</b> (click to expand)</summary>
+<summary><b>Git and GitHub Guide: Managing Pull Requests</b> (click to expand)</summary>
 <br>
-
-## Git and GitHub Guide: Managing Pull Requests
 
 This guide provides a comprehensive overview of using Git with GitHub, focusing on managing pull requests. It is designed to be useful for users across different operating systems, including Windows, Linux, and macOS.
 
@@ -143,6 +141,25 @@ git pull origin development
 git checkout <your-branch>
 git merge development
 ```
+
+Further, you can check if there were any updates and their status by using:
+
+```bash
+git fetch
+```
+
+This will no apply the changes made remotely! It is used to check for any changes in preparation to pull. 
+
+
+#### Notes:
+
+- If you are unsure of the status use: `git status`
+
+<details>
+<summary><b>Working with the Conda Environment</b> (click to expand)</summary>
+<br>
+
+</details>
 
 ## Setting Up the Conda Environment
 
