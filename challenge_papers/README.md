@@ -113,7 +113,7 @@
 <summary><b>4. TASP: A Time-Phased Model for Sepsis Prediction</b></summary>
 <br>
 
-   [lik](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-049.pdf)
+   [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-049.pdf)
 
    - **Team**: Xiang Li, Yanni Kang, Xiaoyu Jia, Junmei Wang, Guotong Xie (Ping An Technology, Beijing, China)
    - **Abstract**: The Time-phAsed model for Sepsis Prediction (TASP) is introduced, leveraging the time-dependent nature of sepsis incidence in ICU patients. TASP integrates multiple modeling frameworks corresponding to different ICU stay phases: early, middle, and late stages, employing gradient boosting trees and deep learning to accommodate varying feature sets and missing value imputations tailored to each phase. This model scored 0.415 in cross-validation on the training set and ranked 4th with a score of 0.337 on the full test set of the Physionet/Computing in Cardiology Challenge 2019.
