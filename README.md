@@ -3,6 +3,166 @@
 #### Challenge References can be found in [challenge_papers](./challenge_papers/README.md)
 
 <details>
+<summary><b>Git and GitHub Guide: Managing Pull Requests</b> (click to expand)</summary>
+<br>
+
+This guide provides a comprehensive overview of using Git with GitHub, focusing on managing pull requests. It is designed to be useful for users across different operating systems, including Windows, Linux, and macOS.
+
+### Setting Up Git
+
+Before diving into pull requests, ensure Git is installed on your system.
+
+#### Windows
+
+1. Download the Git installer from [git-scm.com](https://git-scm.com/).
+2. Run the installer and follow the prompts. Include Git Bash if you'd like a Unix-style command line.
+3. Verify installation by opening Git Bash or Command Prompt and running `git --version`.
+
+#### Linux
+
+Most Linux distributions include Git. Install it using your package manager.
+
+- For Ubuntu/Debian-based systems:
+
+```bash
+sudo apt update
+sudo apt install git
+```
+
+- For Fedora:
+
+```bash
+sudo dnf install git
+```
+
+- Verify installation with `git --version`.
+
+#### macOS
+
+Git comes pre-installed on macOS. If not, install it via the Xcode Command Line Tools:
+
+```bash
+xcode-select --install
+```
+
+Alternatively, use Homebrew:
+
+```bash
+brew install git
+```
+
+### Configuring Git
+
+Set your username and email address for your commits.
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
+
+### Cloning a Repository
+
+To work on an existing repository, you first need to clone it.
+
+```bash
+git clone <repository-URL>
+```
+
+This command creates a local copy of the repository on your machine.
+
+#### Note:
+- To use GitHub SSH keys for conveniece feel free to follow this [GitHub guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+
+### Creating a New Branch
+
+Before making changes, create a new branch. This keeps your changes separate from the main project until they're ready to be reviewed.
+
+```bash
+git checkout -b <branch-name>
+```
+
+### Making Changes and Committing
+
+1. Make your changes in the local copy.
+2. Use `git add` to stage changes for commit.
+   - To stage a specific file: `git add <file-path>`
+   - To stage all changes: `git add .` or `git add *`
+3. Commit your changes with a message:
+
+```bash
+git commit -m "A brief description of the changes"
+```
+
+### Pushing Changes to GitHub
+
+After committing your changes, push them to GitHub.
+
+```bash
+git push origin <branch-name>
+```
+or just:
+```bash
+git push <branch-name>
+```
+
+#### Note:
+- When first pushing to a newly created branch you need to set origin:
+
+```bash
+git push --set-upstream origin <branch-name>
+```
+
+### Creating a Pull Request
+
+1. Go to the GitHub page of the repository.
+2. Click on "Pull requests" > "New pull request".
+3. Select your branch and the branch you want to merge into (usually the development branch).
+4. Fill in the pull request details and create it.
+
+### Review and Merge
+
+- The project maintainers will review your pull request. Be ready to make additional changes if requested.
+- Once approved, the maintainer can merge your pull request.
+- Once merged, the merger (the person who merged the branch) will delete the feature branch unless asked not to.
+
+#### Note:
+- Development branch should **never** be deleted.
+
+### Keeping Your Branch Up to Date
+
+Before making more changes or before finalizing your pull request, ensure your branch is up to date with the main branch.
+
+```bash
+git checkout main
+git pull origin main
+git checkout <your-branch>
+git merge main
+```
+
+This should mostly be done for `development` branch as it is the primary branch used to put all the features together.
+
+```bash
+git checkout development
+git pull origin development
+git checkout <your-branch>
+git merge development
+```
+
+Further, you can check if there were any updates and their status by using:
+
+```bash
+git fetch
+```
+
+This will no apply the changes made remotely! It is used to check for any changes in preparation to pull. 
+
+
+#### Note:
+- If you are unsure of the status use: `git status`
+
+</details>
+
+<details>
 <summary><b>Working with the Conda Environment</b> (click to expand)</summary>
 <br>
 
