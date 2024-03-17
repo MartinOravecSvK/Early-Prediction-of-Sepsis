@@ -363,9 +363,33 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
    - Exploring alternative metrics, scoring functions, and models to improve early prediction tasks, aiming to optimize real-time prediction settings more effectively.
    - Continued examination of the impacts of utility functions on model outputs and prediction timing to refine and enhance early sepsis prediction approaches.
 
-   ### Notable Mention:
+   ### Unofficial 1st Place
 
-   ### Time-Specific Metalearners for the Early Prediction of Sepsis
+   **Early Prediction of Sepsis Using Multi-Feature Fusion Based XGBoost Learning and Bayesian Optimization**
+
+   - **Team**: Meicheng Yang, Xingyao Wang, Hongxiang Gao, Yuwen Li, Xing Liu, Jianqing Li*, Chengyu Liu* (Southeast University, Nanjing, China, and Central South University, Changsha, China)
+   - **Abstract**: This study develops an XGBoost-based algorithm for sepsis prediction utilizing multi-feature fusion and Bayesian optimization. The model processes 37 clinical variates after preprocessing, including missing value indicators, scoring quantified features, and time series features, for a total of 168 features. Evaluated on the PhysioNet/Computing in Cardiology Challenge 2019 data, the algorithm demonstrated superior performance, achieving a final Unormalized score (U-Score) of 0.364, the highest unofficial score across 24,819 ICU patients from three hospital systems.
+
+   #### Innovations and Key Findings
+
+   - **Multi-Feature Fusion Approach**: Integrates 168 features from clinical data, encompassing missing value indicators, scoring systems (e.g., SOFA, qSOFA, NEWS), and time series analysis, offering a comprehensive perspective for early sepsis prediction.
+   - **Bayesian Optimization for Model Tuning**: Employs Bayesian optimization to fine-tune the hyperparameters of the XGBoost classifier, enhancing model performance and ensuring robustness.
+   - **High Performance on PhysioNet Challenge Data**: The model showcased excellent predictive capability with a U-Score of 0.364 on a hidden test set, highlighting its potential for real-world clinical application.
+
+   #### Challenges and Limitations
+
+   - **Data Preprocessing and Feature Engineering Complexity**: The model requires extensive preprocessing and feature engineering, potentially limiting its applicability in low-resource settings or where rapid deployment is necessary.
+   - **Class Imbalance**: Addressing the significant class imbalance between septic and non-septic patients poses a challenge, managed through down-sampling but necessitating careful consideration in clinical deployment.
+
+   #### Future Directions
+
+   - **Enhanced Feature Selection and Model Simplification**: Future work could focus on refining the feature set and exploring model simplification strategies to maintain high performance while reducing complexity.
+   - **Further Validation Across Diverse Clinical Settings**: Extending validation studies to a broader range of ICU settings and patient populations will be crucial to confirm the model's generalizability and effectiveness.
+
+
+   #### Notable Mention:
+
+   **Time-Specific Metalearners for the Early Prediction of Sepsis**
 
    [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-029.pdf)
 
