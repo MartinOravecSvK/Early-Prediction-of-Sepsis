@@ -70,6 +70,9 @@ git clone <repository-URL>
 
 This command creates a local copy of the repository on your machine.
 
+#### Note:
+- To use GitHub SSH keys for conveniece feel free to follow this [GitHub guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+
 ### Creating a New Branch
 
 Before making changes, create a new branch. This keeps your changes separate from the main project until they're ready to be reviewed.
@@ -83,7 +86,7 @@ git checkout -b <branch-name>
 1. Make your changes in the local copy.
 2. Use `git add` to stage changes for commit.
    - To stage a specific file: `git add <file-path>`
-   - To stage all changes: `git add .`
+   - To stage all changes: `git add .` or `git add *`
 3. Commit your changes with a message:
 
 ```bash
@@ -103,8 +106,7 @@ git push <branch-name>
 ```
 
 #### Note:
-
-When first pushing to a newly created branch you need to set origin:
+- When first pushing to a newly created branch you need to set origin:
 
 ```bash
 git push --set-upstream origin <branch-name>
@@ -114,13 +116,17 @@ git push --set-upstream origin <branch-name>
 
 1. Go to the GitHub page of the repository.
 2. Click on "Pull requests" > "New pull request".
-3. Select your branch and the branch you want to merge into (usually the main project's main branch).
+3. Select your branch and the branch you want to merge into (usually the development branch).
 4. Fill in the pull request details and create it.
 
 ### Review and Merge
 
 - The project maintainers will review your pull request. Be ready to make additional changes if requested.
 - Once approved, the maintainer can merge your pull request.
+- Once merged, the merger (the person who merged the branch) will delete the feature branch unless asked not to.
+
+#### Note:
+- Development branch should **never** be deleted.
 
 ### Keeping Your Branch Up to Date
 
@@ -151,8 +157,7 @@ git fetch
 This will no apply the changes made remotely! It is used to check for any changes in preparation to pull. 
 
 
-#### Notes:
-
+#### Note:
 - If you are unsure of the status use: `git status`
 
 </details>
