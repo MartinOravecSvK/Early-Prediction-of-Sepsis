@@ -272,6 +272,33 @@ Combined the data has 42 MB. Training Set A contains 20,336 subjects and Trainin
    - Enhancement of the ensemble model by incorporating advanced machine learning techniques and exploring alternative ensemble strategies to improve prediction accuracy and generalizability.
    - Clinical validation and integration of the proposed predictive model into ICU workflows, aiming to assess its impact on clinical outcomes and sepsis management strategies.
 
+4. **TASP: A Time-Phased Model for Sepsis Prediction**
+
+   [lik](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-049.pdf)
+
+   - **Team**: Xiang Li, Yanni Kang, Xiaoyu Jia, Junmei Wang, Guotong Xie (Ping An Technology, Beijing, China)
+   - **Abstract**: The Time-phAsed model for Sepsis Prediction (TASP) is introduced, leveraging the time-dependent nature of sepsis incidence in ICU patients. TASP integrates multiple modeling frameworks corresponding to different ICU stay phases: early, middle, and late stages, employing gradient boosting trees and deep learning to accommodate varying feature sets and missing value imputations tailored to each phase. This model scored 0.415 in cross-validation on the training set and ranked 4th with a score of 0.337 on the full test set of the Physionet/Computing in Cardiology Challenge 2019.
+
+   #### Innovations and Key Findings
+
+   - **Time-Phased Approach**: TASP is designed around the observation that sepsis incidence varies with ICU length of stay, implementing specific models for early (1-9 hours), middle (10-49 hours), and late (50+ hours) stages.
+   - **Adaptive Modeling**: Utilizes gradient boosting trees for initial risk assessment and a deep learning framework (RNN) to capture long-term relationships in late-stage sepsis risk, optimizing prediction across different stages of ICU stay.
+   - **Feature Engineering and Missing Value Imputation**: Implements various strategies for feature selection and missing value imputation, addressing the challenges of sparse and irregular data inherent in ICU records.
+   - **Cross-Validation Performance**: Achieved a 0.415 score through 10-fold cross-validation on the training dataset, with simplified versions of the model attaining scores of 0.420 and 0.419 on the official online test set.
+
+   #### Challenges and Limitations
+
+   - **Model Complexity and Interpretability**: The multi-model approach, while effective, increases complexity and may pose challenges for clinical interpretation and real-time application in diverse ICU settings.
+   - **Data-Driven Insights and Generalizability**: Insights gained through data exploration, such as the non-linear relationship between ICU stay length and sepsis incidence, underpin model design but may affect generalizability to other patient populations or clinical conditions.
+
+   #### Future Directions
+
+   - **Refinement of Feature Sets and Objectives**: Further research will focus on optimizing feature sets for each sub-model and aligning the objective function more closely with clinical utility metrics, enhancing both prediction accuracy and clinical relevance.
+   - **Enhanced Model Interpretability**: Efforts to improve the interpretability of complex models like TASP are crucial for clinical adoption, with potential exploration of methods to elucidate model predictions and decision-making processes.
+   - **Extended Validation and Online Testing**: Additional validation across diverse clinical settings and patient populations will be critical for assessing TASP's generalizability and effectiveness in real-world ICU environments.
+
+
+
 5. **Utilizing Informative Missingness for Early Prediction of Sepsis**
    
    [link](https://physionet.org/content/challenge-2019/1.0.0/papers/CinC2019-280.pdf)
