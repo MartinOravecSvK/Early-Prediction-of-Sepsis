@@ -19,11 +19,31 @@ def get_dataset_abspath():
     return DATA_PATH
 
 def get_dataset_as_df(files=-1):
+    """
+    Load dataset into a Pandas DataFrame.
 
-    return pd.DataFrame( get_dataset_as_np(files) )
+    Parameters:
+    - files (int, optional): Number of files to load from the dataset. Defaults to -1, meaning all files.
+
+    Returns:
+    - DataFrame: Pandas DataFrame containing the dataset.
+    """
+    
+    data, columns = get_dataset_as_np(files)
+    return pd.DataFrame(data=data, columns=columns)
 
 def get_dataset_as_np(files=-1):
-  
+    """
+    Load dataset into a NumPy array.
+
+    Parameters:
+    - files (int, optional): Number of files to load from the dataset. Defaults to -1, meaning all files.
+
+    Returns:
+    - ndarray: NumPy array containing the dataset.
+    - ndarray: Array of column names.
+    """
+
     DATA_PATH = get_dataset_abspath()  # Ensure this function is defined and returns the correct path
     file_listA = list(map(lambda file: DATA_PATH + 'training_setA/' + file, os.listdir(DATA_PATH + 'training_setA/'))) 
     file_listB = list(map(lambda file: DATA_PATH + 'training_setB/' + file, os.listdir(DATA_PATH + 'training_setB/'))) 
@@ -40,7 +60,7 @@ def get_dataset_as_np(files=-1):
     print("Loading dataset...")
     with tqdm(total=files) as progress_bar:
         for file in file_list[:files]:
-            file_data = np.genfromtxt(file, delimiter='|').astype(float)
+            file_data = np.genfromtxt(file, delimiter='|', skip_header=1, missing_values=['NA', 'na', ''], filling_values=np.nan)
             if dataset.size == 0:
                 dataset = file_data
             else:
@@ -48,7 +68,8 @@ def get_dataset_as_np(files=-1):
             progress_bar.update(1)
 
     print("Done.")
-    return dataset
+   
+    return dataset, np.genfromtxt(file_list[0], delimiter='|', dtype=str, max_rows=1)
 
 def preprocess_no_strings(df):
     """
