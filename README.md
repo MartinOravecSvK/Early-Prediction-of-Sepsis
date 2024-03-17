@@ -155,11 +155,11 @@ This will no apply the changes made remotely! It is used to check for any change
 
 - If you are unsure of the status use: `git status`
 
+</details>
+
 <details>
 <summary><b>Working with the Conda Environment</b> (click to expand)</summary>
 <br>
-
-</details>
 
 ## Setting Up the Conda Environment
 
