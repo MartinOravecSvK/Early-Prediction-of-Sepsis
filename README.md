@@ -2,6 +2,8 @@
 
 #### Challenge References can be found in [challenge_papers](./challenge_papers/README.md)
 
+#### Repositories for other challenge attempts can be found [here]([./challenge_papers/README.md](https://github.com/search?q=physionet+2019+language%3APython&type=repositories&s=&o=desc&l=Python&p=1))
+
 <details>
 <summary><b>Git and GitHub Guide: Managing Pull Requests</b> (click to expand)</summary>
 <br>
