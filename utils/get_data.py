@@ -25,12 +25,12 @@ def get_dataset_as_df():
     file_listB = os.listdir(DATA_PATH + 'training_setB/')
 
     for file in file_listA:
-        data.append(pd.read_csv(DATA_PATH + 'training_setA/' + file))
+        data.append(pd.read_csv(DATA_PATH + 'training_setA/' + file, sep='|'))
         print("  ", c, end='\r')
         c += 1
     print("  ", c)
     for file in file_listB:
-        data.append(pd.read_csv(DATA_PATH + 'training_setB/' + file))
+        data.append(pd.read_csv(DATA_PATH + 'training_setB/' + file, sep='|'))
         print("  ", c, end='\r')
         c += 1
     print("  ", c)
