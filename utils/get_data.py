@@ -32,12 +32,14 @@ def get_dataset_as_df(files=-1):
     data, columns = get_dataset_as_np(files)
     return pd.DataFrame(data=data, columns=columns)
 
-def get_dataset_as_np(files=-1):
+def get_dataset_as_np(files=-1, concat_files=True):
     """
     Load dataset into a NumPy array.
 
     Parameters:
     - files (int, optional): Number of files to load from the dataset. Defaults to -1, meaning all files.
+    - concat_files (bool, optional): True returns the dataset as 2D array, as a result of concatenating each file, 
+                                     False returns dataset as a list of 2D arrays where each array represents one file
 
     Returns:
     - ndarray: NumPy array containing the dataset.
@@ -61,15 +63,25 @@ def get_dataset_as_np(files=-1):
     with tqdm(total=files) as progress_bar:
         for file in file_list[:files]:
             file_data = np.genfromtxt(file, delimiter='|', skip_header=1, missing_values=['NA', 'na', ''], filling_values=np.nan)
-            if dataset.size == 0:
-                dataset = file_data
+            
+            
+            if len(dataset) == 0:
+                if concat_files:
+                    dataset = file_data
+                else:
+                    dataset = [file_data]
             else:
-                dataset = np.vstack([dataset, file_data])
+                if concat_files:
+                    dataset = np.vstack([dataset, file_data])
+                else:
+                    dataset.append(file_data)
+                
             progress_bar.update(1)
 
     print("Done.")
    
     return dataset, np.genfromtxt(file_list[0], delimiter='|', dtype=str, max_rows=1)
+
 
 def preprocess_no_strings(df):
     """
