@@ -31,7 +31,7 @@ def impute_linear_interpolation(data, column_name):
     imputed_data[column_name] = data[column_name].interpolate(method='linear')
     return imputed_data
 
-def impute_forward_fill_last_recorded(data, column_name):
+def impute_forward_fill_last_recorded(data, column_name, global_mean=None):
     """
     Forward fills missing values in a DataFrame column from the last recorded value,
     replacing NaN values at the beginning of the column with the mean of the rest of the data.
@@ -52,5 +52,10 @@ def impute_forward_fill_last_recorded(data, column_name):
     
     # Forward fill missing values from the last recorded value
     imputed_data[column_name] = data[column_name].ffill()
+
+    # If the first value is still NaN then replace with mean of the dataset
+    if global_mean != None:
+        if pd.isnull(data[column_name].iloc[0]):
+            imputed_data[column_name] = global_mean
     
     return imputed_data
