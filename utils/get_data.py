@@ -39,7 +39,7 @@ def get_dataset_as_np(files=-1, concat_files=True):
     Parameters:
     - files (int, optional): Number of files to load from the dataset. Defaults to -1, meaning all files.
     - concat_files (bool, optional): True returns the dataset as 2D array, as a result of concatenating each file, 
-                                     False returns dataset as a list of 2D arrays where each array represents one file
+                                     False returns dataset as a list of 3D arrays where each array represents one file
 
     Returns:
     - ndarray: NumPy array containing the dataset.
