@@ -75,24 +75,38 @@ def get_dataset_as_np(include_strings=False):
     print("Done")
     return dataset
 
-def get_dataset_as_multiindex_df_with_counter():
+def get_dataset():
     data = []
+    patient_ids = np.array([])
     DATA_PATH = get_dataset_abspath()
     file_listA = os.listdir(DATA_PATH + 'training_setA/')
     file_listB = os.listdir(DATA_PATH + 'training_setB/')
     patient_counter = 1  # Start counter for patient IDs
     patient_id_map = {}  # Map to store counter to filename mapping
-
-    for file_name in file_listA + file_listB:
-        if file_name in file_listA:
-            file_path = os.path.join(DATA_PATH, 'training_setA', file_name)
-        else:
-            file_path = os.path.join(DATA_PATH, 'training_setB', file_name)
+    
+    # Process files in training_setA
+    for file_name in file_listA:
+        file_path = os.path.join(DATA_PATH, 'training_setA', file_name)
         df_temp = pd.read_csv(file_path, sep='|')
-        patient_ids = [patient_counter] * len(df_temp)  # Use counter as patient ID
+        patient_ids = np.append(patient_ids, [patient_counter] * len(df_temp))  # Use counter as patient ID
+        # patient_ids.extends([patient_counter] * len(df_temp))  # Use counter as patient ID
         data.append(df_temp)
         patient_id_map[patient_counter] = file_name  # Map counter to filename
         patient_counter += 1  # Increment counter for the next patient
+        print("  ", patient_counter, end='\r')
+    print("  ", patient_counter)
+
+    # Process files in training_setB
+    for file_name in file_listB:
+        file_path = os.path.join(DATA_PATH, 'training_setB', file_name)
+        df_temp = pd.read_csv(file_path, sep='|')
+        patient_ids = np.append(patient_ids, [patient_counter] * len(df_temp))
+        # patient_ids.extend([patient_counter] * len(df_temp))  # Use counter as patient ID
+        data.append(df_temp)
+        patient_id_map[patient_counter] = file_name  # Map counter to filename
+        patient_counter += 1  # Increment counter for the next patient
+        print("  ", patient_counter, end='\r')
+    print("  ", patient_counter)
 
     combined_df = pd.concat(data, ignore_index=True)
     combined_df['patient_id'] = patient_ids
