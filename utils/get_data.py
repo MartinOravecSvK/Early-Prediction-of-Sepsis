@@ -36,7 +36,6 @@ def get_dataset_as_df():
     print("  ", c)
     
     print("Putting data into dataframe...")
-    # dataset = pd.concat(data)
     dataset = pd.concat(data)
     print("Done")
 
@@ -75,6 +74,32 @@ def get_dataset_as_np(include_strings=False):
 
     print("Done")
     return dataset
+
+def get_dataset_as_multiindex_df_with_counter():
+    data = []
+    DATA_PATH = get_dataset_abspath()
+    file_listA = os.listdir(DATA_PATH + 'training_setA/')
+    file_listB = os.listdir(DATA_PATH + 'training_setB/')
+    patient_counter = 1  # Start counter for patient IDs
+    patient_id_map = {}  # Map to store counter to filename mapping
+
+    for file_name in file_listA + file_listB:
+        if file_name in file_listA:
+            file_path = os.path.join(DATA_PATH, 'training_setA', file_name)
+        else:
+            file_path = os.path.join(DATA_PATH, 'training_setB', file_name)
+        df_temp = pd.read_csv(file_path, sep='|')
+        patient_ids = [patient_counter] * len(df_temp)  # Use counter as patient ID
+        data.append(df_temp)
+        patient_id_map[patient_counter] = file_name  # Map counter to filename
+        patient_counter += 1  # Increment counter for the next patient
+
+    combined_df = pd.concat(data, ignore_index=True)
+    combined_df['patient_id'] = patient_ids
+    combined_df.set_index(['patient_id', combined_df.index], inplace=True)
+    
+    print("Dataset loaded into a MultiIndex DataFrame.")
+    return combined_df, patient_id_map
 
 def preprocess_no_strings(df):
     """
