@@ -21,6 +21,7 @@ dependencies:
   - torchaudio
   - torchvision
   - xgboost
+  - hyperopt
   - pip:
     - hypertools
     - ppca
