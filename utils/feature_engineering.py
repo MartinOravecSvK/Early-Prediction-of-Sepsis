@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from constants import sep_col, con_col
 
 def feature_missing_information(patient_data, columns):
     # temp_data holds the information from the patient file as well as the features that will be calculated
@@ -245,3 +246,6 @@ def preprecess_data(dataset, patient_id_map = None):
     data_labels = data_labels[index]
     
     return data_features, data_labels
+
+if __name__ == '__main__':
+    print(sep_col+con_col)
