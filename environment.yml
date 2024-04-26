@@ -5,22 +5,23 @@ channels:
   - nvidia
   - pytorch
 dependencies:
-  - python=3.11
   - cudatoolkit
-  - pytorch
-  - torchaudio
-  - torchvision
   - jupyterlab
+  - libtiff
+  - matplotlib
   - numpy
   - pandas
+  - pillow
+  - pip
+  - python=3.11
+  - pytorch
   - scikit-learn
   - scipy
   - seaborn
-  - pip
-  - libtiff
-  - matplotlib
-  - pillow
-  - pip
+  - torchaudio
+  - torchvision
+  - xgboost
+  - hyperopt
   - pip:
     - hypertools
     - ppca
