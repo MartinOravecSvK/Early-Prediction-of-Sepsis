@@ -257,7 +257,7 @@ def main():
     # Training loop
     num_epochs = 10
 
-    dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length), batch_size=32, shuffle=True, num_workers=4)
+    dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length), batch_size=128, shuffle=True, num_workers=32)
 
     # ___________________________________________________________________________________________________________________________________
     
@@ -268,9 +268,11 @@ def main():
         train_preds, train_targets = [], []  # Reset predictions and targets at start of epoch
 
         start_time = time.time()
+        total_batches = len(dataloader)
 
         for i, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
             try:
+                seq_lengths = torch.tensor(seq_lengths).to(device)
                 X_batch = X_batch.to(device)
                 y_batch = y_batch.to(device)
 
@@ -302,7 +304,6 @@ def main():
             # Progress and time estimation
             end_batch = time.time()
             elapsed_time = end_batch - start_time
-            total_batches = len(dataloader)  # Update to reflect dataloader's size
             time_per_batch = elapsed_time / (i + 1)
             estimated_time_remaining = (total_batches - (i + 1)) * time_per_batch
             
