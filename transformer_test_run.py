@@ -102,7 +102,7 @@ class PatientDataset(Dataset):
         if len(y_train) > self.max_length:
             y_train = y_train[:self.max_length]
         elif len(y_train) < self.max_length:
-            y_train = pad(torch.tensor(y_train, dtype=torch.float32), (0, self.max_length - len(y_train)), value=-1)
+            y_train = pad(torch.tensor(y_train, dtype=torch.float32), (0, self.max_length - len(y_train)), value=0)
         
         return X_train, y_train, len(y_train)
         # return X_train, y_train, seq_length
@@ -257,8 +257,9 @@ def main():
     # Training loop
     num_epochs = 10
     generator = torch.Generator(device="cuda")
-    batch_size = 64
-    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), batch_size=batch_size, shuffle=True, num_workers=0, generator=generator)
+    batch_size = 128
+    num_workers = 4
+    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), batch_size=batch_size, shuffle=True, num_workers=num_workers, generator=generator)
     
     print("Started Training")
     print(device)
@@ -318,10 +319,21 @@ def main():
             print(f'Processed {ii+1}/{total_batches} batches, ' +
                 f'Estimated time remaining: {estimated_time_remaining / 60:.2f} minutes', end='\r')
 
+        unique_targets = set(train_targets)
+        unique_preds = set(train_preds)
+
+        print(f"Unique values in train_targets: {unique_targets}")
+        print(f"Unique values in train_preds: {unique_preds}")
+
+        # You can also add assertions to ensure only 0 and 1 are present
+        assert unique_targets.issubset({0, 1}), "Targets contain more than two classes"
+        assert unique_preds.issubset({0, 1}), "Predictions contain more than two classes"
+
         # Metrics calculation using the entire epoch's accumulated predictions and labels
         train_accuracy = 0
         if train_total > 0:
             train_accuracy = train_correct / train_total
+
         train_precision = precision_score(train_targets, train_preds, zero_division=0)
         train_recall = recall_score(train_targets, train_preds, zero_division=0)
         train_f1 = f1_score(train_targets, train_preds, zero_division=0)
