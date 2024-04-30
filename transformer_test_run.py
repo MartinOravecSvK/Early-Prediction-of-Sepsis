@@ -194,61 +194,20 @@ def main():
         # Transpose outputs to [batch_size, seq_length]
         outputs = outputs.transpose(0, 1).squeeze(-1)
 
-        print(f"Adjusted Outputs shape: {outputs.shape}")
-
         # Create a boolean mask for valid sequence elements
         max_seq_length = outputs.shape[1]
         mask = torch.arange(max_seq_length, device=outputs.device).expand(len(seq_lengths), max_seq_length) < torch.tensor(seq_lengths, device=outputs.device).unsqueeze(1)
-        print(f"Mask shape: {mask.shape}")
 
         # Apply the mask to filter out invalid sequence elements
-        masked_outputs = outputs[mask]  # This flattens the outputs to only valid entries
-        print(f"Masked Outputs shape: {masked_outputs.shape}")
+        masked_outputs = outputs[mask]
+        masked_outputs = masked_outputs.float()
 
         # Flatten targets similarly, using the same mask
-        masked_targets = targets[mask]  # Ensure targets are also [batch_size, seq_length] and flattened
-        print(f"Masked Targets shape: {masked_targets.shape}")
+        masked_targets = targets[mask]
+        masked_targets = masked_targets.float()
 
         # Calculate and return loss
         return criterion(masked_outputs, masked_targets)
-    
-        # outputs = outputs.unsqueeze(-1)
-        # print(f"Outputs shape: {outputs.shape}")
-    
-        # # Create a mask based on sequence lengths
-        # max_seq_length = outputs.size(1)
-        # mask = torch.arange(max_seq_length).expand(len(seq_lengths), max_seq_length) < torch.tensor(seq_lengths, device=outputs.device).unsqueeze(1)
-        # print(f"Mask shape: {mask.shape}")
-
-        # # Apply the mask to the outputs
-        # masked_outputs = outputs[mask]  # Now this applies the mask correctly across each sequence
-        # masked_outputs = masked_outputs.view(-1, outputs.size(2))  # Reshape to [num_valid_entries, features]
-
-        # # Concatenating the targets similarly
-        # masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(outputs.device)
-
-        # # Calculate and return loss
-        # return criterion(masked_outputs, masked_targets)
-
-    # def compute_loss(outputs, targets, seq_lengths):
-    #     # outputs expected to be [batch_size, seq_length, features], if not adjust accordingly
-    #     # Adjust if your model outputs [seq_length, batch_size, features]
-    #     if outputs.dim() == 3 and outputs.size(1) != len(seq_lengths):
-    #         outputs = outputs.transpose(0, 1)  # Swap batch and seq_length dimensions
-
-    #     # Create mask based on sequence lengths
-    #     mask = torch.arange(outputs.size(1), device=device).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths, device=device).unsqueeze(1).to(outputs.device)
-        
-    #     # Apply mask to outputs and targets
-    #     masked_outputs = torch.masked_select(outputs, mask.unsqueeze(-1)).view(-1, outputs.size(-1)).to(device)
-    #     masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(device)
-        
-    #     # Inside compute_loss function
-    #     print(f"Masked outputs shape: {masked_outputs.shape}")
-    #     print(f"Masked targets shape: {masked_targets.shape}")
-
-    #     # Calculate loss
-    #     return criterion(masked_outputs, masked_targets)
 
     # ___________________________________________________________________________________________________________________________________
 
@@ -286,7 +245,7 @@ def main():
 
     classes = np.array([0, 1])
     class_weights = compute_class_weight('balanced', classes=classes, y=y.to_numpy())
-    class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float).to(device)  # Weight for the positive class
+    class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float32).to(device)  # Weight for the positive class
 
     # Before starting the training loop
     print(f"Class weights tensor: {class_weights_tensor}")
@@ -326,10 +285,6 @@ def main():
 
             optimizer.zero_grad()
             outputs = model(X_batch)
-            
-            print("Outputs shape: ", outputs.shape)
-            print("X_batch shape: ", X_batch.shape)
-            print("y_batch shape: ", y_batch.shape)
 
             loss = compute_loss(outputs, y_batch, seq_lengths)
             loss.backward()
@@ -338,7 +293,8 @@ def main():
             train_loss += loss.item()
             valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
             
-            predicted_labels = (outputs > 0.5).int()
+            predicted_labels = (outputs.sigmoid() > 0.5).int()
+            predicted_labels = predicted_labels.transpose(0, 1)
             for i, length in enumerate(seq_lengths):
                 train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
                 train_total += length
