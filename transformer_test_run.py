@@ -82,9 +82,8 @@ class TransformerTimeSeries(nn.Module):
         return x.squeeze(-1)
 
 class PatientDataset(Dataset):
-    def __init__(self, patient_ids, labels, X, y, max_length, device):
+    def __init__(self, patient_ids, X, y, max_length, device):
         self.patient_ids = patient_ids
-        self.labels = labels
         self.device = device
         self.max_length = max_length
         self.X = X
@@ -191,32 +190,50 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} for training.")
 
-    # def compute_loss(outputs, targets, seq_lengths):
-    #     mask = torch.arange(outputs.size(0)).expand(len(seq_lengths), outputs.size(0)) < torch.tensor(seq_lengths).unsqueeze(1)
-    #     mask = mask.to(outputs.device)
-    #     outputs = outputs[mask]
-    #     targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)])
-    #     return criterion(outputs, targets)
-        
     def compute_loss(outputs, targets, seq_lengths):
-        # outputs expected to be [batch_size, seq_length, features], if not adjust accordingly
-        # Adjust if your model outputs [seq_length, batch_size, features]
-        if outputs.dim() == 3 and outputs.size(1) != len(seq_lengths):
-            outputs = outputs.transpose(0, 1)  # Swap batch and seq_length dimensions
-
-        # Create mask based on sequence lengths
-        mask = torch.arange(outputs.size(1), device=device).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths, device=device).unsqueeze(1).to(outputs.device)
+        # mask = torch.arange(outputs.size(0)).expand(len(seq_lengths), outputs.size(0)) < torch.tensor(seq_lengths).unsqueeze(1)
+        # mask = mask.to(outputs.device)
+        # outputs = outputs[mask]
+        # targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)])
+        # return criterion(outputs, targets)
         
-        # Apply mask to outputs and targets
-        masked_outputs = torch.masked_select(outputs, mask.unsqueeze(-1)).view(-1, outputs.size(-1)).to(device)
-        masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(device)
-        
-        # Inside compute_loss function
-        print(f"Masked outputs shape: {masked_outputs.shape}")
-        print(f"Masked targets shape: {masked_targets.shape}")
+        outputs = outputs.unsqueeze(-1)
+        print(f"Outputs shape: {outputs.shape}")
+    
+        # Create a mask based on sequence lengths
+        max_seq_length = outputs.size(1)
+        mask = torch.arange(max_seq_length).expand(len(seq_lengths), max_seq_length) < torch.tensor(seq_lengths, device=outputs.device).unsqueeze(1)
+        print(f"Mask shape: {mask.shape}")
 
-        # Calculate loss
+        # Apply the mask to the outputs
+        masked_outputs = outputs[mask]  # Now this applies the mask correctly across each sequence
+        masked_outputs = masked_outputs.view(-1, outputs.size(2))  # Reshape to [num_valid_entries, features]
+
+        # Concatenating the targets similarly
+        masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(outputs.device)
+
+        # Calculate and return loss
         return criterion(masked_outputs, masked_targets)
+
+    # def compute_loss(outputs, targets, seq_lengths):
+    #     # outputs expected to be [batch_size, seq_length, features], if not adjust accordingly
+    #     # Adjust if your model outputs [seq_length, batch_size, features]
+    #     if outputs.dim() == 3 and outputs.size(1) != len(seq_lengths):
+    #         outputs = outputs.transpose(0, 1)  # Swap batch and seq_length dimensions
+
+    #     # Create mask based on sequence lengths
+    #     mask = torch.arange(outputs.size(1), device=device).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths, device=device).unsqueeze(1).to(outputs.device)
+        
+    #     # Apply mask to outputs and targets
+    #     masked_outputs = torch.masked_select(outputs, mask.unsqueeze(-1)).view(-1, outputs.size(-1)).to(device)
+    #     masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(device)
+        
+    #     # Inside compute_loss function
+    #     print(f"Masked outputs shape: {masked_outputs.shape}")
+    #     print(f"Masked targets shape: {masked_targets.shape}")
+
+    #     # Calculate loss
+    #     return criterion(masked_outputs, masked_targets)
 
     # ___________________________________________________________________________________________________________________________________
 
@@ -266,8 +283,8 @@ def main():
 
     # Training loop
     num_epochs = 10
-
-    dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length, device), batch_size=32, shuffle=True, num_workers=4)
+    generator = torch.Generator(device="cuda")
+    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), batch_size=32, shuffle=True, num_workers=0, generator=generator)
 
     # ___________________________________________________________________________________________________________________________________
     
@@ -287,47 +304,36 @@ def main():
         total_batches = len(dataloader)
 
         for i, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
-            try:
-                seq_lengths = torch.tensor(seq_lengths, device=device)
-                X_batch = X_batch.to(device)
-                y_batch = y_batch.to(device)
+            # try:
+            seq_lengths = torch.tensor(seq_lengths, device=device)
+            X_batch = X_batch.to(device)
+            y_batch = y_batch.to(device)
 
-                optimizer.zero_grad()
-                outputs = model(X_batch)
-               
-                loss = compute_loss(outputs, y_batch, seq_lengths)
-                loss.backward()
-                optimizer.step()
+            optimizer.zero_grad()
+            outputs = model(X_batch)
+            
+            print("Outputs shape: ", outputs.shape)
+            print("X_batch shape: ", X_batch.shape)
+            print("y_batch shape: ", y_batch.shape)
 
-                train_loss += loss.item()
-                valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
-                
-                predicted_labels = (outputs > 0.5).int()
-                for i, length in enumerate(seq_lengths):
-                    train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
-                    train_total += length
+            loss = compute_loss(outputs, y_batch, seq_lengths)
+            loss.backward()
+            optimizer.step()
 
-                train_preds.extend(predicted_labels.tolist())
-                train_targets.extend(valid_labels.tolist())
+            train_loss += loss.item()
+            valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
+            
+            predicted_labels = (outputs > 0.5).int()
+            for i, length in enumerate(seq_lengths):
+                train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
+                train_total += length
 
-                # print(f"Outputs shape: {outputs.shape}")
-                # print(f"X_batch shape: {X_batch.shape}")
-                # print(f"y_batch shape: {y_batch.shape}")
-                # print(f"seq_lengths shape: {seq_lengths.shape}")
+            train_preds.extend(predicted_labels.tolist())
+            train_targets.extend(valid_labels.tolist())
 
-                # print(f"Current loss: {loss.item()}")
-
-                # print(f"Outputs contains NaN/Inf: {torch.isnan(outputs).any() or torch.isinf(outputs).any()}")
-                # print(f"Loss contains NaN/Inf: {torch.isnan(loss).any() or torch.isinf(loss).any()}")
-
-                # print(f"Outputs device: {outputs.device}")
-                # print(f"X_batch device: {X_batch.device}")
-                # print(f"y_batch device: {y_batch.device}")
-                # print(f"seq_lengths device: {seq_lengths.device}")
-
-            except Exception as e:
-                print(f"Error processing batch: {e}")
-                break
+            # except Exception as e:
+            #     print(f"Error processing batch: {e}")
+            #     break
             
             # Progress and time estimation
             end_batch = time.time()
