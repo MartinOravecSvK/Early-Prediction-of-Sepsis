@@ -322,9 +322,6 @@ def main():
         unique_targets = set(train_targets)
         unique_preds = set(train_preds)
 
-        print(f"Unique values in train_targets: {unique_targets}")
-        print(f"Unique values in train_preds: {unique_preds}")
-
         # You can also add assertions to ensure only 0 and 1 are present
         assert unique_targets.issubset({0, 1}), "Targets contain more than two classes"
         assert unique_preds.issubset({0, 1}), "Predictions contain more than two classes"
