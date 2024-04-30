@@ -104,7 +104,8 @@ class PatientDataset(Dataset):
             # Pad if shorter, assuming -1 as a padding value which should be ignored during loss calculation
             y_train = np.pad(y_train, (0, self.max_length - len(y_train)), 'constant', constant_values=(-1,))
         
-        return X_train, torch.tensor(y_train, dtype=torch.float32), seq_length
+        # return X_train, torch.tensor(y_train, dtype=torch.float32), seq_length
+        return X_train, torch.tensor(y_train, dtype=torch.float32), len(y_train)
 
 
 def prepare_patient_data(patient_data, max_length):
@@ -186,13 +187,29 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} for training.")
 
-    def compute_loss(outputs, targets, seq_lengths):
-        mask = torch.arange(outputs.size(0)).expand(len(seq_lengths), outputs.size(0)) < torch.tensor(seq_lengths).unsqueeze(1)
-        mask = mask.to(outputs.device)
-        outputs = outputs[mask]
-        targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)])
-        return criterion(outputs, targets)
+    # def compute_loss(outputs, targets, seq_lengths):
+    #     mask = torch.arange(outputs.size(0)).expand(len(seq_lengths), outputs.size(0)) < torch.tensor(seq_lengths).unsqueeze(1)
+    #     mask = mask.to(outputs.device)
+    #     outputs = outputs[mask]
+    #     targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)])
+    #     return criterion(outputs, targets)
         
+    def compute_loss(outputs, targets, seq_lengths):
+        # outputs expected to be [batch_size, seq_length, features], if not adjust accordingly
+        # Adjust if your model outputs [seq_length, batch_size, features]
+        if outputs.dim() == 3 and outputs.size(1) != len(seq_lengths):
+            outputs = outputs.transpose(0, 1)  # Swap batch and seq_length dimensions
+
+        # Create mask based on sequence lengths
+        mask = torch.arange(outputs.size(1)).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths).unsqueeze(1).to(outputs.device)
+        
+        # Apply mask to outputs and targets
+        masked_outputs = torch.masked_select(outputs, mask.unsqueeze(-1)).view(-1, outputs.size(-1))
+        masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)])
+        
+        # Calculate loss
+        return criterion(masked_outputs, masked_targets)
+
     # ___________________________________________________________________________________________________________________________________
 
 
@@ -243,16 +260,16 @@ def main():
     dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length), batch_size=32, shuffle=True, num_workers=4)
 
     # ___________________________________________________________________________________________________________________________________
-
+    
     print("Started Training")
     for epoch in range(num_epochs):
         model.train()
         train_loss, train_correct, train_total = 0, 0, 0
-        train_preds, train_targets = [], []
-        
+        train_preds, train_targets = [], []  # Reset predictions and targets at start of epoch
+
         start_time = time.time()
 
-        for X_batch, y_batch, seq_lengths in dataloader:
+        for i, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
             try:
                 X_batch = X_batch.to(device)
                 y_batch = y_batch.to(device)
@@ -264,38 +281,44 @@ def main():
                 optimizer.step()
 
                 train_loss += loss.item()
+
+                # Mask outputs to calculate predictions only for valid sequence parts
+                # mask = torch.arange(outputs.size(1)).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths).unsqueeze(1).to(device)
+                # valid_outputs = outputs[mask]
+                valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
+                
                 predicted_labels = (outputs > 0.5).int()
-                # Handle dynamic sequence length for accuracy calculation
                 for i, length in enumerate(seq_lengths):
                     train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
                     train_total += length
-                
-                # train_loss += loss.item()
-                # valid_outputs = [outputs[:seq_lengths[i], i] for i in range(len(X_batch))]
-                # valid_labels = [y_batch[i, :seq_lengths[i]] for i in range(len(X_batch))]
-                # predicted_labels = [torch.round(torch.sigmoid(vo)) for vo in valid_outputs]
-                
-                # # Update metrics
-                # for i in range(len(predicted_labels)):
-                #     train_correct += (predicted_labels[i] == valid_labels[i]).sum().item()
-                #     train_total += seq_lengths[i]
-                #     train_preds.extend(predicted_labels[i].tolist())
-                #     train_targets.extend(valid_labels[i].tolist())
-            
+
+                train_preds.extend(predicted_labels.tolist())
+                train_targets.extend(valid_labels.tolist())
+
             except Exception as e:
-                print(f"Error processing patient ID {patient_id}: {e}")
+                print(f"Error processing batch: {e}")
                 break
             
             # Progress and time estimation
             end_batch = time.time()
             elapsed_time = end_batch - start_time
-            batches_done = i + 1
-            total_batches = len(train_ids)
-            time_per_batch = elapsed_time / batches_done
-            estimated_time_remaining = (total_batches - batches_done) * time_per_batch
+            total_batches = len(dataloader)  # Update to reflect dataloader's size
+            time_per_batch = elapsed_time / (i + 1)
+            estimated_time_remaining = (total_batches - (i + 1)) * time_per_batch
             
-            print(f'Processed {batches_done}/{total_batches} patients ({100.0 * batches_done / total_batches:.2f}%), ' +
+            print(f'Processed {i+1}/{total_batches} batches, ' +
                 f'Estimated time remaining: {estimated_time_remaining / 60:.2f} minutes', end='\r')
+
+        # Metrics calculation using the entire epoch's accumulated predictions and labels
+        train_accuracy = 0
+        if train_total > 0:
+            train_accuracy = train_correct / train_total
+        train_precision = precision_score(train_targets, train_preds, zero_division=0)
+        train_recall = recall_score(train_targets, train_preds, zero_division=0)
+        train_f1 = f1_score(train_targets, train_preds, zero_division=0)
+
+        print(f'\nEpoch {epoch+1}, Avg Training Loss: {train_loss / total_batches:.4f}, ' +
+            f'Training Metrics: Acc: {train_accuracy:.4f}, Precision: {train_precision:.4f}, Recall: {train_recall:.4f}, F1: {train_f1:.4f}')
 
         train_accuracy = train_correct / train_total
         train_precision = precision_score(train_targets, train_preds)
