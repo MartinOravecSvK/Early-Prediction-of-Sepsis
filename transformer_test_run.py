@@ -208,8 +208,8 @@ def main():
         mask = torch.arange(outputs.size(1)).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths).unsqueeze(1).to(outputs.device)
         
         # Apply mask to outputs and targets
-        masked_outputs = torch.masked_select(outputs, mask.unsqueeze(-1)).view(-1, outputs.size(-1))
-        masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)])
+        masked_outputs = torch.masked_select(outputs, mask.unsqueeze(-1)).view(-1, outputs.size(-1)).to(device)
+        masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(device)
         
         # Calculate loss
         return criterion(masked_outputs, masked_targets)
@@ -253,7 +253,7 @@ def main():
     class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float).to(device)  # Weight for the positive class
 
     # Initialize BCEWithLogitsLoss with pos_weight
-    criterion = nn.BCEWithLogitsLoss(pos_weight=class_weights_tensor)
+    criterion = nn.BCEWithLogitsLoss(pos_weight=class_weights_tensor).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -265,7 +265,12 @@ def main():
     # ___________________________________________________________________________________________________________________________________
     
     print("Started Training")
+    print(device)
     model.to(device)
+    if torch.cuda.is_available():
+        model.cuda()
+    
+
     for epoch in range(num_epochs):
         model.train()
         train_loss, train_correct, train_total = 0, 0, 0
@@ -282,15 +287,17 @@ def main():
 
                 optimizer.zero_grad()
                 outputs = model(X_batch)
+               
+                print(f"Outputs device: {outputs.device}")
+                print(f"X_batch device: {X_batch.device}")
+                print(f"y_batch device: {y_batch.device}")
+                print(f"seq_lengths device: {seq_lengths.device}")
+                
                 loss = compute_loss(outputs, y_batch, seq_lengths)
                 loss.backward()
                 optimizer.step()
 
                 train_loss += loss.item()
-
-                # Mask outputs to calculate predictions only for valid sequence parts
-                # mask = torch.arange(outputs.size(1)).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths).unsqueeze(1).to(device)
-                # valid_outputs = outputs[mask]
                 valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
                 
                 predicted_labels = (outputs > 0.5).int()
