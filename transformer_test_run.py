@@ -191,29 +191,44 @@ def main():
     print(f"Using {device} for training.")
 
     def compute_loss(outputs, targets, seq_lengths):
-        # mask = torch.arange(outputs.size(0)).expand(len(seq_lengths), outputs.size(0)) < torch.tensor(seq_lengths).unsqueeze(1)
-        # mask = mask.to(outputs.device)
-        # outputs = outputs[mask]
-        # targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)])
-        # return criterion(outputs, targets)
-        
-        outputs = outputs.unsqueeze(-1)
-        print(f"Outputs shape: {outputs.shape}")
-    
-        # Create a mask based on sequence lengths
-        max_seq_length = outputs.size(1)
-        mask = torch.arange(max_seq_length).expand(len(seq_lengths), max_seq_length) < torch.tensor(seq_lengths, device=outputs.device).unsqueeze(1)
+        # Transpose outputs to [batch_size, seq_length]
+        outputs = outputs.transpose(0, 1).squeeze(-1)
+
+        print(f"Adjusted Outputs shape: {outputs.shape}")
+
+        # Create a boolean mask for valid sequence elements
+        max_seq_length = outputs.shape[1]
+        mask = torch.arange(max_seq_length, device=outputs.device).expand(len(seq_lengths), max_seq_length) < torch.tensor(seq_lengths, device=outputs.device).unsqueeze(1)
         print(f"Mask shape: {mask.shape}")
 
-        # Apply the mask to the outputs
-        masked_outputs = outputs[mask]  # Now this applies the mask correctly across each sequence
-        masked_outputs = masked_outputs.view(-1, outputs.size(2))  # Reshape to [num_valid_entries, features]
+        # Apply the mask to filter out invalid sequence elements
+        masked_outputs = outputs[mask]  # This flattens the outputs to only valid entries
+        print(f"Masked Outputs shape: {masked_outputs.shape}")
 
-        # Concatenating the targets similarly
-        masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(outputs.device)
+        # Flatten targets similarly, using the same mask
+        masked_targets = targets[mask]  # Ensure targets are also [batch_size, seq_length] and flattened
+        print(f"Masked Targets shape: {masked_targets.shape}")
 
         # Calculate and return loss
         return criterion(masked_outputs, masked_targets)
+    
+        # outputs = outputs.unsqueeze(-1)
+        # print(f"Outputs shape: {outputs.shape}")
+    
+        # # Create a mask based on sequence lengths
+        # max_seq_length = outputs.size(1)
+        # mask = torch.arange(max_seq_length).expand(len(seq_lengths), max_seq_length) < torch.tensor(seq_lengths, device=outputs.device).unsqueeze(1)
+        # print(f"Mask shape: {mask.shape}")
+
+        # # Apply the mask to the outputs
+        # masked_outputs = outputs[mask]  # Now this applies the mask correctly across each sequence
+        # masked_outputs = masked_outputs.view(-1, outputs.size(2))  # Reshape to [num_valid_entries, features]
+
+        # # Concatenating the targets similarly
+        # masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(outputs.device)
+
+        # # Calculate and return loss
+        # return criterion(masked_outputs, masked_targets)
 
     # def compute_loss(outputs, targets, seq_lengths):
     #     # outputs expected to be [batch_size, seq_length, features], if not adjust accordingly
