@@ -42,6 +42,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset, Dataset
+from torch.nn.functional import pad
 
 # ___________________________________________________________________________________________________________________________________
 
@@ -101,11 +102,11 @@ class PatientDataset(Dataset):
         if len(y_train) > self.max_length:
             y_train = y_train[:self.max_length]  # Trim if longer
         elif len(y_train) < self.max_length:
-            # Pad if shorter, assuming -1 as a padding value which should be ignored during loss calculation
-            y_train = np.pad(y_train, (0, self.max_length - len(y_train)), 'constant', constant_values=(-1,))
+            # Pad if shorter
+            y_train = pad(torch.tensor(y_train), (0, self.max_length - len(y_train)), value=-1)
         
         # return X_train, torch.tensor(y_train, dtype=torch.float32), seq_length
-        return X_train, torch.tensor(y_train, dtype=torch.float32), len(y_train)
+        return X_train, y_train, len(y_train)
 
 
 def prepare_patient_data(patient_data, max_length):
@@ -213,11 +214,11 @@ def main():
     # ___________________________________________________________________________________________________________________________________
 
 
-
-    df = dataset
-    X = df.drop('SepsisLabel', axis=1)
+    X = dataset.drop('SepsisLabel', axis=1)
     X = add_nan_indicators(X)
-    y = df['SepsisLabel']
+    y = dataset['SepsisLabel']
+    # just in case
+    dataset *= 0
 
     print("Seeing if there are still any nan values or +/- infinities")
     # Just trying to fix some errors I got only on a GPU
@@ -243,11 +244,10 @@ def main():
     # Initialize model, criterion, and optimizer
     input_dim = X.shape[1]
     model = TransformerTimeSeries(input_dim=input_dim)
-    model.to(device)
 
     classes = np.array([0, 1])
     class_weights = compute_class_weight('balanced', classes=classes, y=y.to_numpy())
-    class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float)  # Weight for the positive class
+    class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float).to(device)  # Weight for the positive class
 
     # Initialize BCEWithLogitsLoss with pos_weight
     criterion = nn.BCEWithLogitsLoss(pos_weight=class_weights_tensor)
@@ -257,11 +257,12 @@ def main():
     # Training loop
     num_epochs = 10
 
-    dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length), batch_size=128, shuffle=True, num_workers=32)
+    dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length), batch_size=32, shuffle=True, num_workers=4)
 
     # ___________________________________________________________________________________________________________________________________
     
     print("Started Training")
+    model.to(device)
     for epoch in range(num_epochs):
         model.train()
         train_loss, train_correct, train_total = 0, 0, 0
@@ -320,14 +321,6 @@ def main():
 
         print(f'\nEpoch {epoch+1}, Avg Training Loss: {train_loss / total_batches:.4f}, ' +
             f'Training Metrics: Acc: {train_accuracy:.4f}, Precision: {train_precision:.4f}, Recall: {train_recall:.4f}, F1: {train_f1:.4f}')
-
-        train_accuracy = train_correct / train_total
-        train_precision = precision_score(train_targets, train_preds)
-        train_recall = recall_score(train_targets, train_preds)
-        train_f1 = f1_score(train_targets, train_preds)
-
-        print(f'Epoch {epoch+1}, Avg Training Loss: {train_loss / len(train_ids)}, Training Metrics: Acc: {train_accuracy}, Precision: {train_precision}, Recall: {train_recall}, F1: {train_f1}')
-
 
         # Validation phase
         model.eval()
