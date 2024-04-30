@@ -96,19 +96,16 @@ class PatientDataset(Dataset):
         pid = self.patient_ids[index]
         patient_data = self.X.loc[pid]
         X_train, seq_length = prepare_patient_data(patient_data, self.max_length)
-        y_train = self.y.loc[pid].values  # Correctly retrieve y_train values here
+        y_train = torch.tensor(self.y.loc[pid].values, dtype=torch.float32)
 
         # Ensure y_train is appropriately padded or trimmed to match X_train's length
         if len(y_train) > self.max_length:
-            y_train = y_train[:self.max_length]  # Trim if longer
+            y_train = y_train[:self.max_length]
         elif len(y_train) < self.max_length:
-            # Pad if shorter
-            y_train = pad(torch.tensor(y_train), (0, self.max_length - len(y_train)), value=-1)
+            y_train = pad(torch.tensor(y_train, dtype=torch.float32), (0, self.max_length - len(y_train)), value=-1)
         
-        X_train = X_train.to(self.device)
-        y_train = y_train.to(self.device)
-        # return X_train, torch.tensor(y_train, dtype=torch.float32), seq_length
         return X_train, y_train, len(y_train)
+        # return X_train, y_train, seq_length
 
 
 def prepare_patient_data(patient_data, max_length):
@@ -255,12 +252,13 @@ def main():
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
+    # ___________________________________________________________________________________________________________________________________
+
     # Training loop
     num_epochs = 10
     generator = torch.Generator(device="cuda")
-    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), batch_size=32, shuffle=True, num_workers=0, generator=generator)
-
-    # ___________________________________________________________________________________________________________________________________
+    batch_size = 64
+    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), batch_size=batch_size, shuffle=True, num_workers=0, generator=generator)
     
     print("Started Training")
     print(device)
@@ -277,42 +275,47 @@ def main():
         start_time = time.time()
         total_batches = len(dataloader)
 
-        for i, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
-            # try:
-            seq_lengths = torch.tensor(seq_lengths, device=device)
-            X_batch = X_batch.to(device)
-            y_batch = y_batch.to(device)
+        for ii, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
+            try:
+                seq_lengths = torch.tensor(seq_lengths, device=device)
+                X_batch = X_batch.to(device)
+                y_batch = y_batch.to(device)
 
-            optimizer.zero_grad()
-            outputs = model(X_batch)
+                optimizer.zero_grad()
+                outputs = model(X_batch)
 
-            loss = compute_loss(outputs, y_batch, seq_lengths)
-            loss.backward()
-            optimizer.step()
+                loss = compute_loss(outputs, y_batch, seq_lengths)
+                loss.backward()
+                optimizer.step()
 
-            train_loss += loss.item()
-            valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
-            
-            predicted_labels = (outputs.sigmoid() > 0.5).int()
-            predicted_labels = predicted_labels.transpose(0, 1)
-            for i, length in enumerate(seq_lengths):
-                train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
-                train_total += length
+                train_loss += loss.item()
+                valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
+                
+                predicted_labels = (outputs.sigmoid() > 0.5).int()
+                predicted_labels = predicted_labels.transpose(0, 1)
+                # for i, length in enumerate(seq_lengths):
+                #     train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
+                #     train_total += length
+                for i, length in enumerate(seq_lengths):
+                    train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
+                    train_total += length
+                    train_preds.extend(predicted_labels[i][:length].tolist())  # Note the change here
 
-            train_preds.extend(predicted_labels.tolist())
-            train_targets.extend(valid_labels.tolist())
 
-            # except Exception as e:
-            #     print(f"Error processing batch: {e}")
-            #     break
+                # train_preds.extend(predicted_labels.transpose(0, 1).tolist())
+                train_targets.extend(valid_labels.tolist())
+
+            except Exception as e:
+                print(f"Error processing batch: {e}")
+                break
             
             # Progress and time estimation
             end_batch = time.time()
             elapsed_time = end_batch - start_time
-            time_per_batch = elapsed_time / (i + 1)
-            estimated_time_remaining = (total_batches - (i + 1)) * time_per_batch
+            time_per_batch = elapsed_time / (ii + 1)
+            estimated_time_remaining = (total_batches - (ii + 1)) * time_per_batch
             
-            print(f'Processed {i+1}/{total_batches} batches, ' +
+            print(f'Processed {ii+1}/{total_batches} batches, ' +
                 f'Estimated time remaining: {estimated_time_remaining / 60:.2f} minutes', end='\r')
 
         # Metrics calculation using the entire epoch's accumulated predictions and labels
@@ -375,6 +378,9 @@ def main():
         print(f'Epoch {epoch+1}, Avg Training Loss: {train_loss / len(train_ids)}, Training Metrics: Acc: {train_accuracy}, Precision: {train_precision}, Recall: {train_recall}, F1: {train_f1}')
         print(f'Avg Validation Loss: {val_loss / len(val_ids)}, Validation Metrics: Acc: {val_accuracy}, Precision: {val_precision}, Recall: {val_recall}, F1: {val_f1}')
 
+    save_model = True
+    if save_model:
+        torch.save(model, 'models/transformer/transformer_2l.pth')
 
 if __name__=='__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
