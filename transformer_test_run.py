@@ -82,9 +82,10 @@ class TransformerTimeSeries(nn.Module):
         return x.squeeze(-1)
 
 class PatientDataset(Dataset):
-    def __init__(self, patient_ids, labels, X, y, max_length):
+    def __init__(self, patient_ids, labels, X, y, max_length, device):
         self.patient_ids = patient_ids
         self.labels = labels
+        self.device = device
         self.max_length = max_length
         self.X = X
         self.y = y
@@ -105,6 +106,8 @@ class PatientDataset(Dataset):
             # Pad if shorter
             y_train = pad(torch.tensor(y_train), (0, self.max_length - len(y_train)), value=-1)
         
+        X_train = X_train.to(self.device)
+        y_train = y_train.to(self.device)
         # return X_train, torch.tensor(y_train, dtype=torch.float32), seq_length
         return X_train, y_train, len(y_train)
 
@@ -257,7 +260,7 @@ def main():
     # Training loop
     num_epochs = 10
 
-    dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length), batch_size=32, shuffle=True, num_workers=4)
+    dataloader = DataLoader(PatientDataset(train_ids, y, X, y, max_length, device), batch_size=32, shuffle=True, num_workers=4)
 
     # ___________________________________________________________________________________________________________________________________
     
