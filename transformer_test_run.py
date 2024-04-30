@@ -188,7 +188,7 @@ def main():
         return x_balanced, y_balanced
 
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} for training.")
 
     # def compute_loss(outputs, targets, seq_lengths):
@@ -205,12 +205,16 @@ def main():
             outputs = outputs.transpose(0, 1)  # Swap batch and seq_length dimensions
 
         # Create mask based on sequence lengths
-        mask = torch.arange(outputs.size(1)).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths).unsqueeze(1).to(outputs.device)
+        mask = torch.arange(outputs.size(1), device=device).expand(len(seq_lengths), outputs.size(1)) < torch.tensor(seq_lengths, device=device).unsqueeze(1).to(outputs.device)
         
         # Apply mask to outputs and targets
         masked_outputs = torch.masked_select(outputs, mask.unsqueeze(-1)).view(-1, outputs.size(-1)).to(device)
         masked_targets = torch.cat([targets[i][:l] for i, l in enumerate(seq_lengths)]).to(device)
         
+        # Inside compute_loss function
+        print(f"Masked outputs shape: {masked_outputs.shape}")
+        print(f"Masked targets shape: {masked_targets.shape}")
+
         # Calculate loss
         return criterion(masked_outputs, masked_targets)
 
@@ -252,6 +256,9 @@ def main():
     class_weights = compute_class_weight('balanced', classes=classes, y=y.to_numpy())
     class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float).to(device)  # Weight for the positive class
 
+    # Before starting the training loop
+    print(f"Class weights tensor: {class_weights_tensor}")
+
     # Initialize BCEWithLogitsLoss with pos_weight
     criterion = nn.BCEWithLogitsLoss(pos_weight=class_weights_tensor).to(device)
 
@@ -281,18 +288,13 @@ def main():
 
         for i, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
             try:
-                seq_lengths = torch.tensor(seq_lengths).to(device)
+                seq_lengths = torch.tensor(seq_lengths, device=device)
                 X_batch = X_batch.to(device)
                 y_batch = y_batch.to(device)
 
                 optimizer.zero_grad()
                 outputs = model(X_batch)
                
-                print(f"Outputs device: {outputs.device}")
-                print(f"X_batch device: {X_batch.device}")
-                print(f"y_batch device: {y_batch.device}")
-                print(f"seq_lengths device: {seq_lengths.device}")
-                
                 loss = compute_loss(outputs, y_batch, seq_lengths)
                 loss.backward()
                 optimizer.step()
@@ -307,6 +309,21 @@ def main():
 
                 train_preds.extend(predicted_labels.tolist())
                 train_targets.extend(valid_labels.tolist())
+
+                # print(f"Outputs shape: {outputs.shape}")
+                # print(f"X_batch shape: {X_batch.shape}")
+                # print(f"y_batch shape: {y_batch.shape}")
+                # print(f"seq_lengths shape: {seq_lengths.shape}")
+
+                # print(f"Current loss: {loss.item()}")
+
+                # print(f"Outputs contains NaN/Inf: {torch.isnan(outputs).any() or torch.isinf(outputs).any()}")
+                # print(f"Loss contains NaN/Inf: {torch.isnan(loss).any() or torch.isinf(loss).any()}")
+
+                # print(f"Outputs device: {outputs.device}")
+                # print(f"X_batch device: {X_batch.device}")
+                # print(f"y_batch device: {y_batch.device}")
+                # print(f"seq_lengths device: {seq_lengths.device}")
 
             except Exception as e:
                 print(f"Error processing batch: {e}")
@@ -384,5 +401,6 @@ def main():
 
 if __name__=='__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.set_default_device('cuda')
     print(f"Using {device} for training.")
     main()
