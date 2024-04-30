@@ -393,6 +393,7 @@ def main():
 
 if __name__=='__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    torch.set_default_device('cuda')
+    if device == "cuda":
+        torch.set_default_device('cuda')
     print(f"Using {device} for training.")
     main()
