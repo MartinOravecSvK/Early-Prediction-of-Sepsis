@@ -88,6 +88,16 @@ def prepare_patient_data(patient_data, max_length):
 
 def main():
     dataset, patient_id_map = get_data.get_dataset()
+    print("Dataset initially: ", dataset.shape)
+    downsampling = True
+    if downsampling:
+        sepsis_groups = dataset.groupby(level="patient_id")["SepsisLabel"].max()
+        patients_sepsis = sepsis_groups[sepsis_groups == 1].index
+        patients_no_sepsis = sepsis_groups[sepsis_groups == 0].index
+        min_size = len(patients_sepsis)
+        sampled_no_sepsis = np.random.choice(patients_no_sepsis, min_size, replace=False)
+        dataset = dataset.loc[np.concatenate([patients_sepsis, sampled_no_sepsis])]
+        print("Dataset after downsampling: ", dataset.shape)
 
     # First lets experiment with only raw data 
     # We have to however impute NaN values since Neural Networks can't (natively) handle them
@@ -205,30 +215,30 @@ def main():
     train_ids, val_ids = train_test_split(patient_ids, test_size=0.2, random_state=42)
 
     models_to_train = [
-        (1, 64, 0.1, "transformer_1l_64d.pth"),
-        (1, 128, 0.1, "transformer_1l_128d.pth"),
-        (1, 256, 0.1, "transformer_1l_256d.pth"),
-        (1, 256, 0.1, "transformer_1l_512d.pth"),
-        (2, 64, 0.1, "transformer_2l_64d.pth"),
-        (2, 128, 0.1, "transformer_2l_128d.pth"),
-        (2, 256, 0.1, "transformer_2l_256d.pth"),
-        (2, 512, 0.1, "transformer_2l_512d.pth"),
-        (4, 64, 0.1, "transformer_4l_64d.pth"),
-        (4, 128, 0.1, "transformer_4l_128d.pth"),
-        (4, 256, 0.1, "transformer_4l_256d.pth"),
-        (4, 512, 0.1, "transformer_4l_512d.pth"),
-        (6, 64, 0.1, "transformer_6l_64d.pth"),
-        (6, 128, 0.1, "transformer_6l_128d.pth"),
-        (6, 256, 0.1, "transformer_6l_256d.pth"),
-        (6, 512, 0.1, "transformer_6l_512d.pth"),
-        (8, 64, 0.1, "transformer_8l_64d.pth"),
-        (8, 128, 0.1, "transformer_8l_128d.pth"),
-        (8, 256, 0.1, "transformer_8l_256d.pth"),
-        (8, 512, 0.1, "transformer_8l_512d.pth"),
-        (12, 64, 0.1, "transformer_12l_64d.pth"),
-        (12, 128, 0.1, "transformer_12l_128d.pth"),
-        (12, 256, 0.1, "transformer_12l_256d.pth"),
-        (12, 512, 0.1, "transformer_12l_512d.pth"),
+        (1, 64, 0.1, "downsampled_transformer_1l_64d.pth"),
+        (1, 128, 0.1, "downsampled_transformer_1l_128d.pth"),
+        (1, 256, 0.1, "downsampled_transformer_1l_256d.pth"),
+        (1, 512, 0.1, "downsampled_transformer_1l_512d.pth"),
+        (2, 64, 0.1, "downsampled_transformer_2l_64d.pth"),
+        (2, 128, 0.1, "downsampled_transformer_2l_128d.pth"),
+        (2, 256, 0.1, "downsampled_transformer_2l_256d.pth"),
+        (2, 512, 0.1, "downsampled_transformer_2l_512d.pth"),
+        (4, 64, 0.1, "downsampled_transformer_4l_64d.pth"),
+        (4, 128, 0.1, "downsampled_transformer_4l_128d.pth"),
+        (4, 256, 0.1, "downsampled_transformer_4l_256d.pth"),
+        (4, 512, 0.1, "downsampled_transformer_4l_512d.pth"),
+        (6, 64, 0.1, "downsampled_transformer_6l_64d.pth"),
+        (6, 128, 0.1, "downsampled_transformer_6l_128d.pth"),
+        (6, 256, 0.1, "downsampled_transformer_6l_256d.pth"),
+        (6, 512, 0.1, "downsampled_transformer_6l_512d.pth"),
+        (8, 64, 0.1, "downsampled_transformer_8l_64d.pth"),
+        (8, 128, 0.1, "downsampled_transformer_8l_128d.pth"),
+        (8, 256, 0.1, "downsampled_transformer_8l_256d.pth"),
+        (8, 512, 0.1, "downsampled_transformer_8l_512d.pth"),
+        (12, 64, 0.1, "downsampled_transformer_12l_64d.pth"),
+        (12, 128, 0.1, "downsampled_transformer_12l_128d.pth"),
+        (12, 256, 0.1, "downsampled_transformer_12l_256d.pth"),
+        (12, 512, 0.1, "downsampled_transformer_12l_512d.pth"),
     ]
 
     for model_params in models_to_train:
