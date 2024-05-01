@@ -239,189 +239,226 @@ def main():
     patient_ids = X.index.get_level_values('patient_id').unique()
     train_ids, val_ids = train_test_split(patient_ids, test_size=0.2, random_state=42)
 
+    models_to_train = [
+        (1, 64, 0.1, "transformer_1l_64d.pth"),
+        (1, 128, 0.1, "transformer_1l_128d.pth"),
+        (1, 256, 0.1, "transformer_1l_256d.pth"),
+        (1, 256, 0.1, "transformer_1l_512d.pth"),
+        (2, 64, 0.1, "transformer_2l_64d.pth"),
+        (2, 128, 0.1, "transformer_2l_128d.pth"),
+        (2, 256, 0.1, "transformer_2l_256d.pth"),
+        (2, 512, 0.1, "transformer_2l_512d.pth"),
+        (4, 64, 0.1, "transformer_4l_64d.pth"),
+        (4, 128, 0.1, "transformer_4l_128d.pth"),
+        (4, 256, 0.1, "transformer_4l_256d.pth"),
+        (4, 512, 0.1, "transformer_4l_512d.pth"),
+        (6, 64, 0.1, "transformer_6l_64d.pth"),
+        (6, 128, 0.1, "transformer_6l_128d.pth"),
+        (6, 256, 0.1, "transformer_6l_256d.pth"),
+        (6, 512, 0.1, "transformer_6l_512d.pth"),
+        (8, 64, 0.1, "transformer_8l_64d.pth"),
+        (8, 128, 0.1, "transformer_8l_128d.pth"),
+        (8, 256, 0.1, "transformer_8l_256d.pth"),
+        (8, 512, 0.1, "transformer_8l_512d.pth"),
+        (12, 64, 0.1, "transformer_12l_64d.pth"),
+        (12, 128, 0.1, "transformer_12l_128d.pth"),
+        (12, 256, 0.1, "transformer_12l_256d.pth"),
+        (12, 512, 0.1, "transformer_12l_512d.pth"),
+    ]
+
+    for model_params in models_to_train:
+        model_name = model_params[3]
+        n_layers = model_params[0]
+        d_model = model_params[1]
+        dropout = model_params[2]
+
     # Initialize model, criterion, and optimizer
-    input_dim = X.shape[1]
-    n_layers = 2 # number of transformer blocks
-    d_model = 128
-    dropout = 0.2
-    model = TransformerTimeSeries(input_dim=input_dim,
-                                  d_model=d_model, 
-                                  num_layers=n_layers,
-                                  dropout=dropout)
+        input_dim = X.shape[1]
+        # model_name = "transformer_2l_128d.pth"
+        # n_layers = 2 # number of transformer blocks
+        # d_model = 128
+        # dropout = 0.2
+        model = TransformerTimeSeries(input_dim=input_dim,
+                                    d_model=d_model, 
+                                    num_layers=n_layers,
+                                    dropout=dropout)
 
-    classes = np.array([0, 1])
-    class_weights = compute_class_weight('balanced', classes=classes, y=y.to_numpy())
-    class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float32).to(device)  # Weight for the positive class
+        classes = np.array([0, 1])
+        class_weights = compute_class_weight('balanced', classes=classes, y=y.to_numpy())
+        class_weights_tensor = torch.tensor(class_weights[1], dtype=torch.float32).to(device)  # Weight for the positive class
 
-    # Before starting the training loop
-    print(f"Class weights tensor: {class_weights_tensor}")
+        # Before starting the training loop
+        print(f"Class weights tensor: {class_weights_tensor}")
 
-    # Initialize BCEWithLogitsLoss with pos_weight
-    criterion = nn.BCEWithLogitsLoss(pos_weight=class_weights_tensor).to(device)
+        # Initialize BCEWithLogitsLoss with pos_weight
+        criterion = nn.BCEWithLogitsLoss(pos_weight=class_weights_tensor).to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    # ___________________________________________________________________________________________________________________________________
+        # ___________________________________________________________________________________________________________________________________
 
-    # Training loop
-    num_epochs = 10
-    generator = torch.Generator(device="cpu")
-    batch_size = 128
-    num_workers = 4
-    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), 
-                            batch_size=batch_size, 
-                            shuffle=True, 
-                            num_workers=num_workers, 
-                            generator=generator)
-    
-    print("Started Training")
-    print(device)
-    model.to(device)
-    if torch.cuda.is_available():
-        model.cuda()
-    
-    num_epochs = 100
-    patience = 5  # Number of epochs to wait after last time validation loss improved.
-    best_val_loss = float('inf')
-    epochs_no_improve = 0
-    early_stop = False
+        # Training loop
+        num_epochs = 10
+        generator = torch.Generator(device="cpu")
+        batch_size = 128
+        num_workers = 4
+        dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), 
+                                batch_size=batch_size, 
+                                shuffle=True, 
+                                num_workers=num_workers, 
+                                generator=generator)
+        
+        print("Started Training")
+        print(device)
+        model.to(device)
+        if torch.cuda.is_available():
+            model.cuda()
+        
+        num_epochs = 100
+        patience = 5  # Number of epochs to wait after last time validation loss improved.
+        best_val_loss = float('inf')
+        epochs_no_improve = 0
+        early_stop = False
 
-    for epoch in range(num_epochs):
-        model.train()
-        train_loss, train_correct, train_total = 0, 0, 0
-        train_preds, train_targets = [], []  # Reset predictions and targets at start of epoch
+        for epoch in range(num_epochs):
+            model.train()
+            train_loss, train_correct, train_total = 0, 0, 0
+            train_preds, train_targets = [], []  # Reset predictions and targets at start of epoch
 
-        start_time = time.time()
-        total_batches = len(dataloader)
+            start_time = time.time()
+            total_batches = len(dataloader)
 
-        for ii, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
-            # try:
-            seq_lengths = torch.tensor(seq_lengths, device=device)
-            X_batch = X_batch.to(device)
-            y_batch = y_batch.to(device)
-
-            optimizer.zero_grad()
-            outputs = model(X_batch)
-
-            loss = compute_loss(outputs, y_batch, seq_lengths)
-            loss.backward()
-            optimizer.step()
-
-            train_loss += loss.item()
-            valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
-            
-            predicted_labels = (outputs.sigmoid() > 0.5).int()
-            predicted_labels = predicted_labels.transpose(0, 1)
-            for i, length in enumerate(seq_lengths):
-                train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
-                train_total += length
-                train_preds.extend(predicted_labels[i][:length].tolist())  # Note the change here
-
-
-            # train_preds.extend(predicted_labels.transpose(0, 1).tolist())
-            train_targets.extend(valid_labels.tolist())
-
-            # except Exception as e:
-            #     print(f"Error processing batch: {e}")
-            #     break
-            
-            # Progress and time estimation
-            end_batch = time.time()
-            elapsed_time = end_batch - start_time
-            time_per_batch = elapsed_time / (ii + 1)
-            estimated_time_remaining = (total_batches - (ii + 1)) * time_per_batch
-            
-            print(f'Processed {ii+1}/{total_batches} batches, ' +
-                f'Estimated time remaining: {estimated_time_remaining / 60:.2f} minutes', end='\r')
-
-        unique_targets = set(train_targets)
-        unique_preds = set(train_preds)
-
-        # You can also add assertions to ensure only 0 and 1 are present
-        assert unique_targets.issubset({0, 1}), "Targets contain more than two classes"
-        assert unique_preds.issubset({0, 1}), "Predictions contain more than two classes"
-
-        # Metrics calculation using the entire epoch's accumulated predictions and labels
-        train_accuracy = 0
-        if train_total > 0:
-            train_accuracy = train_correct / train_total
-
-        train_precision = precision_score(train_targets, train_preds, zero_division=0)
-        train_recall = recall_score(train_targets, train_preds, zero_division=0)
-        train_f1 = f1_score(train_targets, train_preds, zero_division=0)
-
-        print(f'\nEpoch {epoch+1}, Avg Training Loss: {train_loss / total_batches:.4f}, ' +
-            f'Training Metrics: Acc: {train_accuracy:.4f}, Precision: {train_precision:.4f}, Recall: {train_recall:.4f}, F1: {train_f1:.4f}')
-
-        # Validation phase
-        model.eval()
-        val_loss, val_correct, val_total = 0, 0, 0
-        val_preds, val_targets = [], []
-        start_val_time = time.time()
-
-        with torch.no_grad():
-            for i, patient_id in enumerate(val_ids):
-                start_batch = time.time()
-
+            for ii, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
                 # try:
-                patient_data = X.loc[patient_id]
-                X_val, sequence_length = prepare_patient_data(patient_data, max_length)
-                X_val = X_val.to(device)
-                y_val = torch.tensor(y.loc[patient_id].values, dtype=torch.float32, device=device)
+                seq_lengths = torch.tensor(seq_lengths, device=device)
+                X_batch = X_batch.to(device)
+                y_batch = y_batch.to(device)
 
-                val_outputs = model(X_val.unsqueeze(0))
-                v_loss = criterion(val_outputs[:sequence_length].squeeze(), y_val[:sequence_length])
-                val_loss += v_loss.item()
+                optimizer.zero_grad()
+                outputs = model(X_batch)
 
-                val_predicted_labels = torch.round(torch.sigmoid(val_outputs[:sequence_length].squeeze()))
-                val_correct += (val_predicted_labels == y_val[:sequence_length]).sum().item()
-                val_total += sequence_length
+                loss = compute_loss(outputs, y_batch, seq_lengths)
+                loss.backward()
+                optimizer.step()
 
-                val_preds.extend(val_predicted_labels.tolist())
-                val_targets.extend(y_val[:sequence_length].tolist())
+                train_loss += loss.item()
+                valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
                 
+                predicted_labels = (outputs.sigmoid() > 0.5).int()
+                predicted_labels = predicted_labels.transpose(0, 1)
+                for i, length in enumerate(seq_lengths):
+                    train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
+                    train_total += length
+                    train_preds.extend(predicted_labels[i][:length].tolist())  # Note the change here
+
+
+                # train_preds.extend(predicted_labels.transpose(0, 1).tolist())
+                train_targets.extend(valid_labels.tolist())
+
                 # except Exception as e:
-                #     print(f"Error processing patient ID {patient_id}: {e}")
-
-                # Progress and time estimation for validation
-                end_batch = time.time()
-                elapsed_time = end_batch - start_val_time
-                batches_done = i + 1
-                total_batches = len(val_ids)
-                time_per_batch = elapsed_time / batches_done
-                estimated_time_remaining = (total_batches - batches_done) * time_per_batch
+                #     print(f"Error processing batch: {e}")
+                #     break
                 
-                print(f'Validation: Processed {batches_done}/{total_batches} patients ({100.0 * batches_done / total_batches:.2f}%), ' +
+                # Progress and time estimation
+                end_batch = time.time()
+                elapsed_time = end_batch - start_time
+                time_per_batch = elapsed_time / (ii + 1)
+                estimated_time_remaining = (total_batches - (ii + 1)) * time_per_batch
+                
+                print(f'Processed {ii+1}/{total_batches} batches, ' +
                     f'Estimated time remaining: {estimated_time_remaining / 60:.2f} minutes', end='\r')
 
-        val_accuracy = val_correct / val_total
-        val_precision = precision_score(val_targets, val_preds)
-        val_recall = recall_score(val_targets, val_preds)
-        val_f1 = f1_score(val_targets, val_preds)
+            unique_targets = set(train_targets)
+            unique_preds = set(train_preds)
 
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            epochs_no_improve = 0
-        else:
-            epochs_no_improve += 1
+            # You can also add assertions to ensure only 0 and 1 are present
+            assert unique_targets.issubset({0, 1}), "Targets contain more than two classes"
+            assert unique_preds.issubset({0, 1}), "Predictions contain more than two classes"
 
-        if epochs_no_improve >= patience:
-            print('Early stopping!')
-            early_stop = True
-            break
+            # Metrics calculation using the entire epoch's accumulated predictions and labels
+            train_accuracy = 0
+            if train_total > 0:
+                train_accuracy = train_correct / train_total
 
-        # Print epoch summary
-        print(f'Epoch {epoch+1}, Avg Validation Loss: {val_loss / len(val_ids)}, ' +
-            f'Validation Metrics: Acc: {val_accuracy}, Precision: {val_precision}, ' +
-            f'Recall: {val_recall}, F1: {val_f1}')
+            train_precision = precision_score(train_targets, train_preds, zero_division=0)
+            train_recall = recall_score(train_targets, train_preds, zero_division=0)
+            train_f1 = f1_score(train_targets, train_preds, zero_division=0)
 
-    if early_stop:
-        print("Stopped early due to no improvement in validation loss.")
+            print(f'\nEpoch {epoch+1}, Avg Training Loss: {train_loss / total_batches:.4f}, ' +
+                f'Training Metrics: Acc: {train_accuracy:.4f}, Precision: {train_precision:.4f}, Recall: {train_recall:.4f}, F1: {train_f1:.4f}')
+
+            # Validation phase
+            model.eval()
+            val_loss, val_correct, val_total = 0, 0, 0
+            val_preds, val_targets = [], []
+            start_val_time = time.time()
+
+            with torch.no_grad():
+                for i, patient_id in enumerate(val_ids):
+                    start_batch = time.time()
+
+                    # try:
+                    patient_data = X.loc[patient_id]
+                    X_val, sequence_length = prepare_patient_data(patient_data, max_length)
+                    X_val = X_val.to(device)
+                    y_val = torch.tensor(y.loc[patient_id].values, dtype=torch.float32, device=device)
+
+                    val_outputs = model(X_val.unsqueeze(0))
+                    v_loss = criterion(val_outputs[:sequence_length].squeeze(), y_val[:sequence_length])
+                    val_loss += v_loss.item()
+
+                    val_predicted_labels = torch.round(torch.sigmoid(val_outputs[:sequence_length].squeeze()))
+                    val_correct += (val_predicted_labels == y_val[:sequence_length]).sum().item()
+                    val_total += sequence_length
+
+                    val_preds.extend(val_predicted_labels.tolist())
+                    val_targets.extend(y_val[:sequence_length].tolist())
+                    
+                    # except Exception as e:
+                    #     print(f"Error processing patient ID {patient_id}: {e}")
+
+                    # Progress and time estimation for validation
+                    end_batch = time.time()
+                    elapsed_time = end_batch - start_val_time
+                    batches_done = i + 1
+                    total_batches = len(val_ids)
+                    time_per_batch = elapsed_time / batches_done
+                    estimated_time_remaining = (total_batches - batches_done) * time_per_batch
+                    
+                    print(f'Validation: Processed {batches_done}/{total_batches} patients ({100.0 * batches_done / total_batches:.2f}%), ' +
+                        f'Estimated time remaining: {estimated_time_remaining / 60:.2f} minutes', end='\r')
+
+            val_accuracy = val_correct / val_total
+            val_precision = precision_score(val_targets, val_preds)
+            val_recall = recall_score(val_targets, val_preds)
+            val_f1 = f1_score(val_targets, val_preds)
+
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                epochs_no_improve = 0
+            else:
+                epochs_no_improve += 1
+
+            if epochs_no_improve >= patience:
+                print('Early stopping!')
+                early_stop = True
+                break
+
+            # Print epoch summary
+            print(f'Epoch {epoch+1}, Avg Validation Loss: {val_loss / len(val_ids)}, ' +
+                f'Validation Metrics: Acc: {val_accuracy}, Precision: {val_precision}, ' +
+                f'Recall: {val_recall}, F1: {val_f1}')
+
+        if early_stop:
+            print("Stopped early due to no improvement in validation loss.")
 
 
-    save_model = True
-    if save_model:
-        torch.save(model, 'models/transformer/transformer_2l_128d.pth')
+        save_model = True
+        if save_model:
+            print("Svaing model "+model_name+"\n\n\n")
+            print("_______________________________________________________________________")
+            print("\n\n\n")
+            torch.save(model, 'models/transformer/'+model_name)
 
 if __name__=='__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
