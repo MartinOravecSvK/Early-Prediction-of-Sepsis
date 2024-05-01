@@ -189,18 +189,34 @@ def main():
 
     # ___________________________________________________________________________________________________________________________________
 
-    print("Dataset shape: ", dataset.shape)
     feature_engineer = True
     if feature_engineer:
         X, y = preprecess_data(dataset, patient_id_map)
-        means = np.mean(X, axis=0)
-        stds = np.std(X, axis=0)
 
-        # Avoid division by zero by replacing zero std values with 1 (or small number)
-        stds[stds == 0] = 1
+        # Convert X back to DataFrame and preserve original indexing if necessary
+        X = pd.DataFrame(X, index=dataset.index)
+
+        # Now we normalize X assuming it's now a DataFrame
+        means = X.mean(axis=0)
+        stds = X.std(axis=0)
+        stds.replace(0, 1, inplace=True) 
 
         # Apply z-score normalization
         X = (X - means) / stds
+        X = add_nan_indicators(X)
+
+        y = dataset['SepsisLabel']        
+
+        # X, y = preprecess_data(dataset, patient_id_map)
+        # means = np.mean(X, axis=0)
+        # stds = np.std(X, axis=0)
+
+        # # Avoid division by zero by replacing zero std values with 1 (or small number)
+        # stds[stds == 0] = 1
+
+        # # Apply z-score normalization
+        # X = pd.DataFrame((X - means) / stds)
+        # y = dataset['SepsisLabel']
     else :
 
         X = dataset.drop('SepsisLabel', axis=1)
