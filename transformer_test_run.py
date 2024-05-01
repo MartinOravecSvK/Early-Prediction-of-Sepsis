@@ -27,6 +27,7 @@ if utils_abs_path not in sys.path:
 import utils.get_data as get_data
 # from impute_methods import *
 from utils.impute_methods import impute_linear_interpolation
+from utils.feature_engineering import preprecess_data
 
 # ___________________________________________________________________________________________________________________________________
 
@@ -88,7 +89,9 @@ def prepare_patient_data(patient_data, max_length):
 
 def main():
     dataset, patient_id_map = get_data.get_dataset()
+    
     print("Dataset initially: ", dataset.shape)
+
     downsampling = True
     if downsampling:
         sepsis_groups = dataset.groupby(level="patient_id")["SepsisLabel"].max()
@@ -108,7 +111,7 @@ def main():
 
     # Feel free to omit this (EXPERIMENTAL)
     # Normilize the dataset
-    if True:
+    if False:
         # Check if multiindex_df is indeed a MultiIndex DataFrame
         if isinstance(dataset.index, pd.MultiIndex):
             # Exclude 'SepsisLabel' from normalization
@@ -186,10 +189,24 @@ def main():
 
     # ___________________________________________________________________________________________________________________________________
 
+    print("Dataset shape: ", dataset.shape)
+    feature_engineer = True
+    if feature_engineer:
+        X, y = preprecess_data(dataset, patient_id_map)
+        means = np.mean(X, axis=0)
+        stds = np.std(X, axis=0)
 
-    X = dataset.drop('SepsisLabel', axis=1)
-    X = add_nan_indicators(X)
-    y = dataset['SepsisLabel']
+        # Avoid division by zero by replacing zero std values with 1 (or small number)
+        stds[stds == 0] = 1
+
+        # Apply z-score normalization
+        X = (X - means) / stds
+    else :
+
+        X = dataset.drop('SepsisLabel', axis=1)
+        X = add_nan_indicators(X)
+        y = dataset['SepsisLabel']
+    
     # just in case
     dataset *= 0
 
