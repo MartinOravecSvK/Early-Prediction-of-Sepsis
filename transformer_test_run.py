@@ -15,6 +15,9 @@ warnings.filterwarnings("ignore")
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
 
+from models.architecture.Transformer import TransformerTimeSeries
+
+# Load in utility functions we need
 current_dir = os.getcwd()
 utils_path = os.path.join(current_dir, 'utils')
 utils_abs_path = os.path.abspath(utils_path)
@@ -46,40 +49,40 @@ from torch.nn.functional import pad
 
 # ___________________________________________________________________________________________________________________________________
 
-class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, dropout=0.1, max_len=5000):
-        super(PositionalEncoding, self).__init__()
-        self.dropout = nn.Dropout(p=dropout)
+# class PositionalEncoding(nn.Module):
+#     def __init__(self, d_model, dropout=0.1, max_len=5000):
+#         super(PositionalEncoding, self).__init__()
+#         self.dropout = nn.Dropout(p=dropout)
 
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer('pe', pe)
+#         pe = torch.zeros(max_len, d_model)
+#         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+#         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))
+#         pe[:, 0::2] = torch.sin(position * div_term)
+#         pe[:, 1::2] = torch.cos(position * div_term)
+#         pe = pe.unsqueeze(0).transpose(0, 1)
+#         self.register_buffer('pe', pe)
 
-    def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
-        return self.dropout(x)
+#     def forward(self, x):
+#         x = x + self.pe[:x.size(0), :]
+#         return self.dropout(x)
 
 
-class TransformerTimeSeries(nn.Module):
-    def __init__(self, input_dim=1, d_model=64, nhead=4, num_layers=2, dropout=0.2):
-        super(TransformerTimeSeries, self).__init__()
+# class TransformerTimeSeries(nn.Module):
+#     def __init__(self, input_dim=1, d_model=64, nhead=4, num_layers=2, dropout=0.2):
+#         super(TransformerTimeSeries, self).__init__()
 
-        self.encoder = nn.Linear(input_dim, d_model)
-        self.pos_encoder = PositionalEncoding(d_model, dropout)
-        encoder_layers = nn.TransformerEncoderLayer(d_model, nhead)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
-        self.decoder = nn.Linear(d_model, 1)
+#         self.encoder = nn.Linear(input_dim, d_model)
+#         self.pos_encoder = PositionalEncoding(d_model, dropout)
+#         encoder_layers = nn.TransformerEncoderLayer(d_model, nhead)
+#         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
+#         self.decoder = nn.Linear(d_model, 1)
 
-    def forward(self, x):
-        x = self.encoder(x)
-        x = self.pos_encoder(x)
-        x = self.transformer_encoder(x.transpose(0, 1))
-        x = self.decoder(x)
-        return x.squeeze(-1)
+#     def forward(self, x):
+#         x = self.encoder(x)
+#         x = self.pos_encoder(x)
+#         x = self.transformer_encoder(x.transpose(0, 1))
+#         x = self.decoder(x)
+#         return x.squeeze(-1)
 
 class PatientDataset(Dataset):
     def __init__(self, patient_ids, X, y, max_length, device):
@@ -238,7 +241,11 @@ def main():
 
     # Initialize model, criterion, and optimizer
     input_dim = X.shape[1]
-    model = TransformerTimeSeries(input_dim=input_dim)
+    n_layers = 2 # number of transformer blocks
+    d_model = 64
+    model = TransformerTimeSeries(input_dim=input_dim,
+                                  d_model=d_model, 
+                                  n_layers=n_layers)
 
     classes = np.array([0, 1])
     class_weights = compute_class_weight('balanced', classes=classes, y=y.to_numpy())
@@ -267,6 +274,11 @@ def main():
     if torch.cuda.is_available():
         model.cuda()
     
+    num_epochs = 100
+    patience = 3  # Number of epochs to wait after last time validation loss improved.
+    best_val_loss = float('inf')
+    epochs_no_improve = 0
+    early_stop = False
 
     for epoch in range(num_epochs):
         model.train()
@@ -294,9 +306,6 @@ def main():
                 
                 predicted_labels = (outputs.sigmoid() > 0.5).int()
                 predicted_labels = predicted_labels.transpose(0, 1)
-                # for i, length in enumerate(seq_lengths):
-                #     train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
-                #     train_total += length
                 for i, length in enumerate(seq_lengths):
                     train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
                     train_total += length
@@ -384,12 +393,32 @@ def main():
         val_f1 = f1_score(val_targets, val_preds)
 
         # Print epoch summary                   
-        print(f'Epoch {epoch+1}, Avg Training Loss: {train_loss / len(train_ids)}, Training Metrics: Acc: {train_accuracy}, Precision: {train_precision}, Recall: {train_recall}, F1: {train_f1}')
-        print(f'Avg Validation Loss: {val_loss / len(val_ids)}, Validation Metrics: Acc: {val_accuracy}, Precision: {val_precision}, Recall: {val_recall}, F1: {val_f1}')
+        # print(f'Epoch {epoch+1}, Avg Training Loss: {train_loss / len(train_ids)}, Training Metrics: Acc: {train_accuracy}, Precision: {train_precision}, Recall: {train_recall}, F1: {train_f1}')
+        # print(f'Avg Validation Loss: {val_loss / len(val_ids)}, Validation Metrics: Acc: {val_accuracy}, Precision: {val_precision}, Recall: {val_recall}, F1: {val_f1}')
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            epochs_no_improve = 0
+        else:
+            epochs_no_improve += 1
+
+        if epochs_no_improve >= patience:
+            print('Early stopping!')
+            early_stop = True
+            break
+
+        # Print epoch summary
+        print(f'Epoch {epoch+1}, Avg Validation Loss: {val_loss / len(val_ids)}, ' +
+            f'Validation Metrics: Acc: {val_accuracy}, Precision: {val_precision}, ' +
+            f'Recall: {val_recall}, F1: {val_f1}')
+
+    if early_stop:
+        print("Stopped early due to no improvement in validation loss.")
+
 
     save_model = True
     if save_model:
-        torch.save(model, 'models/transformer/transformer_2l.pth')
+        torch.save(model, 'models/transformer/transformer_2l_64d.pth')
 
 if __name__=='__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
