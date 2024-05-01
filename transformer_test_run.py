@@ -193,17 +193,43 @@ def main():
     if feature_engineer:
         X, y = preprecess_data(dataset, patient_id_map)
 
-        # Convert X back to DataFrame and preserve original indexing if necessary
-        X = pd.DataFrame(X, index=dataset.index)
+        original_column_names = dataset.columns[dataset.columns != 'SepsisLabel']
 
-        # Now we normalize X assuming it's now a DataFrame
-        means = X.mean(axis=0)
-        stds = X.std(axis=0)
-        stds.replace(0, 1, inplace=True) 
+        # Calculate how many new columns have been added
+        num_original_cols = len(original_column_names)
+        num_new_cols = X.shape[1] - num_original_cols
 
-        # Apply z-score normalization
-        X = (X - means) / stds
+        # Generate new column names for the additional features
+        new_column_names = ["new_feature_" + str(i) for i in range(num_new_cols)]
+
+        # Combine the original column names with the new column names
+        combined_column_names = list(original_column_names) + new_column_names
+
+        # Create the DataFrame with the correct number of column names
+        X = pd.DataFrame(X, columns=combined_column_names)
+
+
+        # column_names = dataset.columns[dataset.columns != 'SepsisLabel']
+        # X = pd.DataFrame(X, columns=column_names)
         X = add_nan_indicators(X)
+        # def add_nan_indicators2(df):
+        #     # Add NaN indicators and convert column names to string to ensure consistency
+        #     for column in df.columns:
+        #         nan_column_name = str(column) + '_nan'  # Ensure column names are string
+        #         df[nan_column_name] = df[column].isna().astype(int)
+        #     df.columns = [str(col) for col in df.columns]  # Convert all column names to strings
+        #     return df
+        # # Convert X back to DataFrame and preserve original indexing if necessary
+        # X = pd.DataFrame(X, index=dataset.index)
+
+        # # Now we normalize X assuming it's now a DataFrame
+        # means = X.mean(axis=0)
+        # stds = X.std(axis=0)
+        # stds.replace(0, 1, inplace=True) 
+
+        # # Apply z-score normalization
+        # X = (X - means) / stds
+        # X = add_nan_indicators2(X)
 
         y = dataset['SepsisLabel']        
 
@@ -218,7 +244,6 @@ def main():
         # X = pd.DataFrame((X - means) / stds)
         # y = dataset['SepsisLabel']
     else :
-
         X = dataset.drop('SepsisLabel', axis=1)
         X = add_nan_indicators(X)
         y = dataset['SepsisLabel']
@@ -248,30 +273,30 @@ def main():
     train_ids, val_ids = train_test_split(patient_ids, test_size=0.2, random_state=42)
 
     models_to_train = [
-        (1, 64, 0.1, "downsampled_transformer_1l_64d.pth"),
-        (1, 128, 0.1, "downsampled_transformer_1l_128d.pth"),
-        (1, 256, 0.1, "downsampled_transformer_1l_256d.pth"),
-        (1, 512, 0.1, "downsampled_transformer_1l_512d.pth"),
-        (2, 64, 0.1, "downsampled_transformer_2l_64d.pth"),
-        (2, 128, 0.1, "downsampled_transformer_2l_128d.pth"),
-        (2, 256, 0.1, "downsampled_transformer_2l_256d.pth"),
-        (2, 512, 0.1, "downsampled_transformer_2l_512d.pth"),
-        (4, 64, 0.1, "downsampled_transformer_4l_64d.pth"),
-        (4, 128, 0.1, "downsampled_transformer_4l_128d.pth"),
-        (4, 256, 0.1, "downsampled_transformer_4l_256d.pth"),
-        (4, 512, 0.1, "downsampled_transformer_4l_512d.pth"),
-        (6, 64, 0.1, "downsampled_transformer_6l_64d.pth"),
-        (6, 128, 0.1, "downsampled_transformer_6l_128d.pth"),
-        (6, 256, 0.1, "downsampled_transformer_6l_256d.pth"),
-        (6, 512, 0.1, "downsampled_transformer_6l_512d.pth"),
-        (8, 64, 0.1, "downsampled_transformer_8l_64d.pth"),
-        (8, 128, 0.1, "downsampled_transformer_8l_128d.pth"),
-        (8, 256, 0.1, "downsampled_transformer_8l_256d.pth"),
-        (8, 512, 0.1, "downsampled_transformer_8l_512d.pth"),
-        (12, 64, 0.1, "downsampled_transformer_12l_64d.pth"),
-        (12, 128, 0.1, "downsampled_transformer_12l_128d.pth"),
-        (12, 256, 0.1, "downsampled_transformer_12l_256d.pth"),
-        (12, 512, 0.1, "downsampled_transformer_12l_512d.pth"),
+        (1, 64, 0.1, "downsampled_engineered_transformer_1l_64d.pth"),
+        (1, 128, 0.1, "downsampled_engineered_transformer_1l_128d.pth"),
+        (1, 256, 0.1, "downsampled_engineered_transformer_1l_256d.pth"),
+        (1, 512, 0.1, "downsampled_engineered_transformer_1l_512d.pth"),
+        (2, 64, 0.1, "downsampled_engineered_transformer_2l_64d.pth"),
+        (2, 128, 0.1, "downsampled_engineered_transformer_2l_128d.pth"),
+        (2, 256, 0.1, "downsampled_engineered_transformer_2l_256d.pth"),
+        (2, 512, 0.1, "downsampled_engineered_transformer_2l_512d.pth"),
+        (4, 64, 0.1, "downsampled_engineered_transformer_4l_64d.pth"),
+        (4, 128, 0.1, "downsampled_engineered_transformer_4l_128d.pth"),
+        (4, 256, 0.1, "downsampled_engineered_transformer_4l_256d.pth"),
+        (4, 512, 0.1, "downsampled_engineered_transformer_4l_512d.pth"),
+        (6, 64, 0.1, "downsampled_engineered_transformer_6l_64d.pth"),
+        (6, 128, 0.1, "downsampled_engineered_transformer_6l_128d.pth"),
+        (6, 256, 0.1, "downsampled_engineered_transformer_6l_256d.pth"),
+        (6, 512, 0.1, "downsampled_engineered_transformer_6l_512d.pth"),
+        (8, 64, 0.1, "downsampled_engineered_transformer_8l_64d.pth"),
+        (8, 128, 0.1, "downsampled_engineered_transformer_8l_128d.pth"),
+        (8, 256, 0.1, "downsampled_engineered_transformer_8l_256d.pth"),
+        (8, 512, 0.1, "downsampled_engineered_transformer_8l_512d.pth"),
+        (12, 64, 0.1, "downsampled_engineered_transformer_12l_64d.pth"),
+        (12, 128, 0.1, "downsampled_engineered_transformer_12l_128d.pth"),
+        (12, 256, 0.1, "downsampled_engineered_transformer_12l_256d.pth"),
+        (12, 512, 0.1, "downsampled_engineered_transformer_12l_512d.pth"),
     ]
 
     for model_params in models_to_train:
