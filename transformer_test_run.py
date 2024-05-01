@@ -242,10 +242,12 @@ def main():
     # Initialize model, criterion, and optimizer
     input_dim = X.shape[1]
     n_layers = 2 # number of transformer blocks
-    d_model = 64
+    d_model = 128
+    dropout = 0.2
     model = TransformerTimeSeries(input_dim=input_dim,
                                   d_model=d_model, 
-                                  n_layers=n_layers)
+                                  num_layers=n_layers,
+                                  dropout=dropout)
 
     classes = np.array([0, 1])
     class_weights = compute_class_weight('balanced', classes=classes, y=y.to_numpy())
@@ -263,10 +265,14 @@ def main():
 
     # Training loop
     num_epochs = 10
-    generator = torch.Generator(device="cuda")
+    generator = torch.Generator(device="cpu")
     batch_size = 128
     num_workers = 4
-    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), batch_size=batch_size, shuffle=True, num_workers=num_workers, generator=generator)
+    dataloader = DataLoader(PatientDataset(train_ids, X, y, max_length, device), 
+                            batch_size=batch_size, 
+                            shuffle=True, 
+                            num_workers=num_workers, 
+                            generator=generator)
     
     print("Started Training")
     print(device)
@@ -275,7 +281,7 @@ def main():
         model.cuda()
     
     num_epochs = 100
-    patience = 3  # Number of epochs to wait after last time validation loss improved.
+    patience = 5  # Number of epochs to wait after last time validation loss improved.
     best_val_loss = float('inf')
     epochs_no_improve = 0
     early_stop = False
@@ -289,35 +295,35 @@ def main():
         total_batches = len(dataloader)
 
         for ii, (X_batch, y_batch, seq_lengths) in enumerate(dataloader):
-            try:
-                seq_lengths = torch.tensor(seq_lengths, device=device)
-                X_batch = X_batch.to(device)
-                y_batch = y_batch.to(device)
+            # try:
+            seq_lengths = torch.tensor(seq_lengths, device=device)
+            X_batch = X_batch.to(device)
+            y_batch = y_batch.to(device)
 
-                optimizer.zero_grad()
-                outputs = model(X_batch)
+            optimizer.zero_grad()
+            outputs = model(X_batch)
 
-                loss = compute_loss(outputs, y_batch, seq_lengths)
-                loss.backward()
-                optimizer.step()
+            loss = compute_loss(outputs, y_batch, seq_lengths)
+            loss.backward()
+            optimizer.step()
 
-                train_loss += loss.item()
-                valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
-                
-                predicted_labels = (outputs.sigmoid() > 0.5).int()
-                predicted_labels = predicted_labels.transpose(0, 1)
-                for i, length in enumerate(seq_lengths):
-                    train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
-                    train_total += length
-                    train_preds.extend(predicted_labels[i][:length].tolist())  # Note the change here
+            train_loss += loss.item()
+            valid_labels = torch.cat([y_batch[j][:seq_lengths[j]] for j in range(len(seq_lengths))])
+            
+            predicted_labels = (outputs.sigmoid() > 0.5).int()
+            predicted_labels = predicted_labels.transpose(0, 1)
+            for i, length in enumerate(seq_lengths):
+                train_correct += (predicted_labels[i][:length] == y_batch[i][:length]).sum().item()
+                train_total += length
+                train_preds.extend(predicted_labels[i][:length].tolist())  # Note the change here
 
 
-                # train_preds.extend(predicted_labels.transpose(0, 1).tolist())
-                train_targets.extend(valid_labels.tolist())
+            # train_preds.extend(predicted_labels.transpose(0, 1).tolist())
+            train_targets.extend(valid_labels.tolist())
 
-            except Exception as e:
-                print(f"Error processing batch: {e}")
-                break
+            # except Exception as e:
+            #     print(f"Error processing batch: {e}")
+            #     break
             
             # Progress and time estimation
             end_batch = time.time()
@@ -357,24 +363,25 @@ def main():
             for i, patient_id in enumerate(val_ids):
                 start_batch = time.time()
 
-                try:
-                    patient_data = X.loc[patient_id]
-                    X_val, sequence_length = prepare_patient_data(patient_data, max_length)
-                    y_val = torch.tensor(y.loc[patient_id].values, dtype=torch.float32)
+                # try:
+                patient_data = X.loc[patient_id]
+                X_val, sequence_length = prepare_patient_data(patient_data, max_length)
+                X_val = X_val.to(device)
+                y_val = torch.tensor(y.loc[patient_id].values, dtype=torch.float32, device=device)
 
-                    val_outputs = model(X_val.unsqueeze(0))
-                    v_loss = criterion(val_outputs[:sequence_length].squeeze(), y_val[:sequence_length])
-                    val_loss += v_loss.item()
+                val_outputs = model(X_val.unsqueeze(0))
+                v_loss = criterion(val_outputs[:sequence_length].squeeze(), y_val[:sequence_length])
+                val_loss += v_loss.item()
 
-                    val_predicted_labels = torch.round(torch.sigmoid(val_outputs[:sequence_length].squeeze()))
-                    val_correct += (val_predicted_labels == y_val[:sequence_length]).sum().item()
-                    val_total += sequence_length
+                val_predicted_labels = torch.round(torch.sigmoid(val_outputs[:sequence_length].squeeze()))
+                val_correct += (val_predicted_labels == y_val[:sequence_length]).sum().item()
+                val_total += sequence_length
 
-                    val_preds.extend(val_predicted_labels.tolist())
-                    val_targets.extend(y_val[:sequence_length].tolist())
+                val_preds.extend(val_predicted_labels.tolist())
+                val_targets.extend(y_val[:sequence_length].tolist())
                 
-                except Exception as e:
-                    print(f"Error processing patient ID {patient_id}: {e}")
+                # except Exception as e:
+                #     print(f"Error processing patient ID {patient_id}: {e}")
 
                 # Progress and time estimation for validation
                 end_batch = time.time()
@@ -391,10 +398,6 @@ def main():
         val_precision = precision_score(val_targets, val_preds)
         val_recall = recall_score(val_targets, val_preds)
         val_f1 = f1_score(val_targets, val_preds)
-
-        # Print epoch summary                   
-        # print(f'Epoch {epoch+1}, Avg Training Loss: {train_loss / len(train_ids)}, Training Metrics: Acc: {train_accuracy}, Precision: {train_precision}, Recall: {train_recall}, F1: {train_f1}')
-        # print(f'Avg Validation Loss: {val_loss / len(val_ids)}, Validation Metrics: Acc: {val_accuracy}, Precision: {val_precision}, Recall: {val_recall}, F1: {val_f1}')
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -418,7 +421,7 @@ def main():
 
     save_model = True
     if save_model:
-        torch.save(model, 'models/transformer/transformer_2l_64d.pth')
+        torch.save(model, 'models/transformer/transformer_2l_128d.pth')
 
 if __name__=='__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

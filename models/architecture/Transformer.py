@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=5000):
@@ -19,7 +20,7 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 class TransformerTimeSeries(nn.Module):
-    def __init__(self, input_dim=1, d_model=64, nhead=4, num_layers=2, dropout=0.2):
+    def __init__(self, input_dim=1, d_model=64, nhead=4, num_layers=2, dropout=0.1):
         super(TransformerTimeSeries, self).__init__()
 
         self.encoder = nn.Linear(input_dim, d_model)
