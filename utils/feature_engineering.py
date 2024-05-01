@@ -247,5 +247,27 @@ def preprecess_data(dataset, patient_id_map = None):
     
     return data_features, data_labels
 
+def preprecess_data2(dataset, patient_id_map = None):
+    frames_features = []
+    frames_labels = []
+    
+    for patient_id in set(dataset.index.get_level_values(0)):
+        if patient_id_map is not None:
+            print(f"Processing data for patient ID: {patient_id}, File: {patient_id_map[patient_id]}", end='\r')
+        
+        patient_data = dataset.loc[patient_id]
+    
+        features, labels = extract_features(patient_data)
+        features = pd.DataFrame(features, index=[patient_id] * len(features))
+        labels = pd.DataFrame(labels, index=[patient_id] * len(labels))
+        
+        frames_features.append(features)
+        frames_labels.append(labels)
+
+    data_features = pd.concat(frames_features)
+    data_labels = pd.concat(frames_labels)
+
+    return data_features, data_labels.squeeze()
+
 if __name__ == '__main__':
     print(sep_col+con_col)
