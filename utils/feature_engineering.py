@@ -1,6 +1,14 @@
 import pandas as pd
 import numpy as np
-from constants import sep_col, con_col
+
+sep_col = ['BaseExcess', 'HCO3', 'FiO2', 'pH', 'PaCO2', 'SaO2', 'AST',
+             'BUN', 'Alkalinephos', 'Calcium', 'Chloride', 'Creatinine',
+             'Glucose', 'Lactate', 'Magnesium', 'Phosphate', 'Potassium',
+             'Bilirubin_total', 'Hct', 'Hgb', 'PTT', 'WBC', 'Platelets',
+             'Bilirubin_direct', 'Fibrinogen']
+
+# Continues Health Indicators
+con_col = ['HR', 'O2Sat', 'Temp', 'SBP', 'MAP', 'DBP', 'Resp', 'EtCO2']
 
 def feature_missing_information(patient_data, columns):
     # temp_data holds the information from the patient file as well as the features that will be calculated
@@ -246,6 +254,28 @@ def preprecess_data(dataset, patient_id_map = None):
     data_labels = data_labels[index]
     
     return data_features, data_labels
+
+def preprecess_data2(dataset, patient_id_map = None):
+    frames_features = []
+    frames_labels = []
+    
+    for patient_id in set(dataset.index.get_level_values(0)):
+        if patient_id_map is not None:
+            print(f"Processing data for patient ID: {patient_id}, File: {patient_id_map[patient_id]}", end='\r')
+        
+        patient_data = dataset.loc[patient_id]
+    
+        features, labels = extract_features(patient_data)
+        features = pd.DataFrame(features, index=[patient_id] * len(features))
+        labels = pd.DataFrame(labels, index=[patient_id] * len(labels))
+        
+        frames_features.append(features)
+        frames_labels.append(labels)
+
+    data_features = pd.concat(frames_features)
+    data_labels = pd.concat(frames_labels)
+
+    return data_features, data_labels.squeeze()
 
 if __name__ == '__main__':
     print(sep_col+con_col)

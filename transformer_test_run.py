@@ -27,6 +27,7 @@ if utils_abs_path not in sys.path:
 import utils.get_data as get_data
 # from impute_methods import *
 from utils.impute_methods import impute_linear_interpolation
+from utils.feature_engineering import preprecess_data, preprecess_data2
 
 # ___________________________________________________________________________________________________________________________________
 
@@ -88,6 +89,18 @@ def prepare_patient_data(patient_data, max_length):
 
 def main():
     dataset, patient_id_map = get_data.get_dataset()
+    
+    print("Dataset initially: ", dataset.shape)
+
+    downsampling = True
+    if downsampling:
+        sepsis_groups = dataset.groupby(level="patient_id")["SepsisLabel"].max()
+        patients_sepsis = sepsis_groups[sepsis_groups == 1].index
+        patients_no_sepsis = sepsis_groups[sepsis_groups == 0].index
+        min_size = len(patients_sepsis)
+        sampled_no_sepsis = np.random.choice(patients_no_sepsis, min_size, replace=False)
+        dataset = dataset.loc[np.concatenate([patients_sepsis, sampled_no_sepsis])]
+        print("Dataset after downsampling: ", dataset.shape)
 
     # First lets experiment with only raw data 
     # We have to however impute NaN values since Neural Networks can't (natively) handle them
@@ -98,7 +111,7 @@ def main():
 
     # Feel free to omit this (EXPERIMENTAL)
     # Normilize the dataset
-    if True:
+    if False:
         # Check if multiindex_df is indeed a MultiIndex DataFrame
         if isinstance(dataset.index, pd.MultiIndex):
             # Exclude 'SepsisLabel' from normalization
@@ -176,19 +189,40 @@ def main():
 
     # ___________________________________________________________________________________________________________________________________
 
+    feature_engineer = True
+    if feature_engineer:
+        X = add_nan_indicators(dataset)
+        XX, y = preprecess_data(X)
+        new_feature_names = [f"new_feature_{i}" for i in range(XX.shape[1])]
+        XX_df = pd.DataFrame(XX, columns=new_feature_names, index=X.index)
 
-    X = dataset.drop('SepsisLabel', axis=1)
-    X = add_nan_indicators(X)
-    y = dataset['SepsisLabel']
+        # Concatenate the new features from XX_df back to the original DataFrame X
+        X = pd.concat([X, XX_df], axis=1)
+        y = dataset['SepsisLabel']
+
+    else :
+        X = dataset.drop('SepsisLabel', axis=1)
+        X = add_nan_indicators(X)
+        y = dataset['SepsisLabel']
+    
     # just in case
     dataset *= 0
 
     print("Seeing if there are still any nan values or +/- infinities")
     # Just trying to fix some errors I got only on a GPU
+    # if X.isin([np.nan, np.inf, -np.inf]).any().any():
+    #     print("Data contains NaN or infinite values. Handling...")
+    #     X.replace([np.inf, -np.inf], np.nan, inplace=True)
+    #     X.fillna(method='ffill', inplace=True)
     if X.isin([np.nan, np.inf, -np.inf]).any().any():
         print("Data contains NaN or infinite values. Handling...")
+        # Replace infinite values with NaN so they can be filled too
         X.replace([np.inf, -np.inf], np.nan, inplace=True)
-        X.fillna(method='ffill', inplace=True) 
+        
+        # First apply forward fill
+        X.fillna(method='ffill', inplace=True)
+        # Then apply backward fill for any remaining NaNs
+        X.fillna(method='bfill', inplace=True)
 
     # Ensure no NaNs or infinities in the target variable as well
     if y.isin([np.nan, np.inf, -np.inf]).any():
@@ -199,36 +233,37 @@ def main():
     # Find the maximum sequence length for padding
     # Yes it's really high, 336, consider making it larger to accommodate actual test set
     max_length = X.groupby('patient_id').size().max()
+
     print("Max length (inputs will be padded to): ", max_length)
 
     patient_ids = X.index.get_level_values('patient_id').unique()
     train_ids, val_ids = train_test_split(patient_ids, test_size=0.2, random_state=42)
 
     models_to_train = [
-        (1, 64, 0.1, "transformer_1l_64d.pth"),
-        (1, 128, 0.1, "transformer_1l_128d.pth"),
-        (1, 256, 0.1, "transformer_1l_256d.pth"),
-        (1, 256, 0.1, "transformer_1l_512d.pth"),
-        (2, 64, 0.1, "transformer_2l_64d.pth"),
-        (2, 128, 0.1, "transformer_2l_128d.pth"),
-        (2, 256, 0.1, "transformer_2l_256d.pth"),
-        (2, 512, 0.1, "transformer_2l_512d.pth"),
-        (4, 64, 0.1, "transformer_4l_64d.pth"),
-        (4, 128, 0.1, "transformer_4l_128d.pth"),
-        (4, 256, 0.1, "transformer_4l_256d.pth"),
-        (4, 512, 0.1, "transformer_4l_512d.pth"),
-        (6, 64, 0.1, "transformer_6l_64d.pth"),
-        (6, 128, 0.1, "transformer_6l_128d.pth"),
-        (6, 256, 0.1, "transformer_6l_256d.pth"),
-        (6, 512, 0.1, "transformer_6l_512d.pth"),
-        (8, 64, 0.1, "transformer_8l_64d.pth"),
-        (8, 128, 0.1, "transformer_8l_128d.pth"),
-        (8, 256, 0.1, "transformer_8l_256d.pth"),
-        (8, 512, 0.1, "transformer_8l_512d.pth"),
-        (12, 64, 0.1, "transformer_12l_64d.pth"),
-        (12, 128, 0.1, "transformer_12l_128d.pth"),
-        (12, 256, 0.1, "transformer_12l_256d.pth"),
-        (12, 512, 0.1, "transformer_12l_512d.pth"),
+        (1, 64, 0.1, "downsampled_engineered_transformer_1l_64d.pth"),
+        (1, 128, 0.1, "downsampled_engineered_transformer_1l_128d.pth"),
+        (1, 256, 0.1, "downsampled_engineered_transformer_1l_256d.pth"),
+        (1, 512, 0.1, "downsampled_engineered_transformer_1l_512d.pth"),
+        (2, 64, 0.1, "downsampled_engineered_transformer_2l_64d.pth"),
+        (2, 128, 0.1, "downsampled_engineered_transformer_2l_128d.pth"),
+        (2, 256, 0.1, "downsampled_engineered_transformer_2l_256d.pth"),
+        (2, 512, 0.1, "downsampled_engineered_transformer_2l_512d.pth"),
+        (4, 64, 0.1, "downsampled_engineered_transformer_4l_64d.pth"),
+        (4, 128, 0.1, "downsampled_engineered_transformer_4l_128d.pth"),
+        (4, 256, 0.1, "downsampled_engineered_transformer_4l_256d.pth"),
+        (4, 512, 0.1, "downsampled_engineered_transformer_4l_512d.pth"),
+        (6, 64, 0.1, "downsampled_engineered_transformer_6l_64d.pth"),
+        (6, 128, 0.1, "downsampled_engineered_transformer_6l_128d.pth"),
+        (6, 256, 0.1, "downsampled_engineered_transformer_6l_256d.pth"),
+        (6, 512, 0.1, "downsampled_engineered_transformer_6l_512d.pth"),
+        (8, 64, 0.1, "downsampled_engineered_transformer_8l_64d.pth"),
+        (8, 128, 0.1, "downsampled_engineered_transformer_8l_128d.pth"),
+        (8, 256, 0.1, "downsampled_engineered_transformer_8l_256d.pth"),
+        (8, 512, 0.1, "downsampled_engineered_transformer_8l_512d.pth"),
+        (12, 64, 0.1, "downsampled_engineered_transformer_12l_64d.pth"),
+        (12, 128, 0.1, "downsampled_engineered_transformer_12l_128d.pth"),
+        (12, 256, 0.1, "downsampled_engineered_transformer_12l_256d.pth"),
+        (12, 512, 0.1, "downsampled_engineered_transformer_12l_512d.pth"),
     ]
 
     for model_params in models_to_train:
