@@ -27,7 +27,7 @@ if utils_abs_path not in sys.path:
 import utils.get_data as get_data
 # from impute_methods import *
 from utils.impute_methods import impute_linear_interpolation
-from utils.feature_engineering import preprecess_data
+from utils.feature_engineering import preprecess_data, preprecess_data2
 
 # ___________________________________________________________________________________________________________________________________
 
@@ -191,58 +191,15 @@ def main():
 
     feature_engineer = True
     if feature_engineer:
-        X, y = preprecess_data(dataset, patient_id_map)
+        X = add_nan_indicators(dataset)
+        XX, y = preprecess_data(X)
+        new_feature_names = [f"new_feature_{i}" for i in range(XX.shape[1])]
+        XX_df = pd.DataFrame(XX, columns=new_feature_names, index=X.index)
 
-        original_column_names = dataset.columns[dataset.columns != 'SepsisLabel']
+        # Concatenate the new features from XX_df back to the original DataFrame X
+        X = pd.concat([X, XX_df], axis=1)
+        y = dataset['SepsisLabel']
 
-        # Calculate how many new columns have been added
-        num_original_cols = len(original_column_names)
-        num_new_cols = X.shape[1] - num_original_cols
-
-        # Generate new column names for the additional features
-        new_column_names = ["new_feature_" + str(i) for i in range(num_new_cols)]
-
-        # Combine the original column names with the new column names
-        combined_column_names = list(original_column_names) + new_column_names
-
-        # Create the DataFrame with the correct number of column names
-        X = pd.DataFrame(X, columns=combined_column_names)
-
-
-        # column_names = dataset.columns[dataset.columns != 'SepsisLabel']
-        # X = pd.DataFrame(X, columns=column_names)
-        X = add_nan_indicators(X)
-        # def add_nan_indicators2(df):
-        #     # Add NaN indicators and convert column names to string to ensure consistency
-        #     for column in df.columns:
-        #         nan_column_name = str(column) + '_nan'  # Ensure column names are string
-        #         df[nan_column_name] = df[column].isna().astype(int)
-        #     df.columns = [str(col) for col in df.columns]  # Convert all column names to strings
-        #     return df
-        # # Convert X back to DataFrame and preserve original indexing if necessary
-        # X = pd.DataFrame(X, index=dataset.index)
-
-        # # Now we normalize X assuming it's now a DataFrame
-        # means = X.mean(axis=0)
-        # stds = X.std(axis=0)
-        # stds.replace(0, 1, inplace=True) 
-
-        # # Apply z-score normalization
-        # X = (X - means) / stds
-        # X = add_nan_indicators2(X)
-
-        y = dataset['SepsisLabel']        
-
-        # X, y = preprecess_data(dataset, patient_id_map)
-        # means = np.mean(X, axis=0)
-        # stds = np.std(X, axis=0)
-
-        # # Avoid division by zero by replacing zero std values with 1 (or small number)
-        # stds[stds == 0] = 1
-
-        # # Apply z-score normalization
-        # X = pd.DataFrame((X - means) / stds)
-        # y = dataset['SepsisLabel']
     else :
         X = dataset.drop('SepsisLabel', axis=1)
         X = add_nan_indicators(X)
@@ -253,10 +210,19 @@ def main():
 
     print("Seeing if there are still any nan values or +/- infinities")
     # Just trying to fix some errors I got only on a GPU
+    # if X.isin([np.nan, np.inf, -np.inf]).any().any():
+    #     print("Data contains NaN or infinite values. Handling...")
+    #     X.replace([np.inf, -np.inf], np.nan, inplace=True)
+    #     X.fillna(method='ffill', inplace=True)
     if X.isin([np.nan, np.inf, -np.inf]).any().any():
         print("Data contains NaN or infinite values. Handling...")
+        # Replace infinite values with NaN so they can be filled too
         X.replace([np.inf, -np.inf], np.nan, inplace=True)
-        X.fillna(method='ffill', inplace=True) 
+        
+        # First apply forward fill
+        X.fillna(method='ffill', inplace=True)
+        # Then apply backward fill for any remaining NaNs
+        X.fillna(method='bfill', inplace=True)
 
     # Ensure no NaNs or infinities in the target variable as well
     if y.isin([np.nan, np.inf, -np.inf]).any():
@@ -267,6 +233,7 @@ def main():
     # Find the maximum sequence length for padding
     # Yes it's really high, 336, consider making it larger to accommodate actual test set
     max_length = X.groupby('patient_id').size().max()
+
     print("Max length (inputs will be padded to): ", max_length)
 
     patient_ids = X.index.get_level_values('patient_id').unique()
