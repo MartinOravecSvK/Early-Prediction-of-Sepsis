@@ -1,6 +1,14 @@
 import pandas as pd
 import numpy as np
-from constants import sep_col, con_col
+
+sep_col = ['BaseExcess', 'HCO3', 'FiO2', 'pH', 'PaCO2', 'SaO2', 'AST',
+             'BUN', 'Alkalinephos', 'Calcium', 'Chloride', 'Creatinine',
+             'Glucose', 'Lactate', 'Magnesium', 'Phosphate', 'Potassium',
+             'Bilirubin_total', 'Hct', 'Hgb', 'PTT', 'WBC', 'Platelets',
+             'Bilirubin_direct', 'Fibrinogen']
+
+# Continues Health Indicators
+con_col = ['HR', 'O2Sat', 'Temp', 'SBP', 'MAP', 'DBP', 'Resp', 'EtCO2']
 
 def feature_missing_information(patient_data, columns):
     # temp_data holds the information from the patient file as well as the features that will be calculated
