@@ -4,6 +4,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 # from ppca import PPCA
+from tqdm import tqdm
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -16,64 +17,93 @@ def get_dataset_abspath():
     DATA_PATH = parent_dir + '/Dataset/'
 
     return DATA_PATH
+  
+def get_dataset_as_df(files=-1):
+    """
+    Load dataset into a Pandas DataFrame.
 
-def get_dataset_as_df():
-    data = []
-    c = 0
-    DATA_PATH = get_dataset_abspath()
-    file_listA = os.listdir(DATA_PATH + 'training_setA/')
-    file_listB = os.listdir(DATA_PATH + 'training_setB/')
+    Parameters:
+    - files (int, optional): Number of files to load from the dataset. Defaults to -1, meaning all files.
 
-    for file in file_listA:
-        data.append(pd.read_csv(DATA_PATH + 'training_setA/' + file, sep='|'))
-        print("  ", c, end='\r')
-        c += 1
-    print("  ", c)
-    for file in file_listB:
-        data.append(pd.read_csv(DATA_PATH + 'training_setB/' + file, sep='|'))
-        print("  ", c, end='\r')
-        c += 1
-    print("  ", c)
+    Returns:
+    - DataFrame: Pandas DataFrame containing the dataset.
+    """
+    if files == -1:
+        data = []
+        c = 0
+        DATA_PATH = get_dataset_abspath()
+        file_listA = os.listdir(DATA_PATH + 'training_setA/')
+        file_listB = os.listdir(DATA_PATH + 'training_setB/')
+
+        for file in file_listA:
+            data.append(pd.read_csv(DATA_PATH + 'training_setA/' + file, sep='|'))
+            print("  ", c, end='\r')
+            c += 1
+        print("  ", c)
+        for file in file_listB:
+            data.append(pd.read_csv(DATA_PATH + 'training_setB/' + file, sep='|'))
+            print("  ", c, end='\r')
+            c += 1
+        print("  ", c)
+
+        print("Putting data into dataframe...")
+        dataset = pd.concat(data)
+        print("Done")
+        return dataset
     
-    print("Putting data into dataframe...")
-    dataset = pd.concat(data)
-    print("Done")
+    data, columns = get_dataset_as_np(files)
+    return pd.DataFrame(data=data, columns=columns)
 
-    return dataset
+def get_dataset_as_np(files=-1, concat_files=True):
+    """
+    Load dataset into a NumPy array.
 
-def get_dataset_as_np(include_strings=False):
-    data = []
-    c = 0
+    Parameters:
+    - files (int, optional): Number of files to load from the dataset. Defaults to -1, meaning all files.
+    - concat_files (bool, optional): True returns the dataset as 2D array, as a result of concatenating each file, 
+                                     False returns dataset as a list of 3D arrays where each array represents one file
+
+    Returns:
+    - ndarray: NumPy array containing the dataset.
+    - ndarray: Array of column names.
+    """
+
     DATA_PATH = get_dataset_abspath()  # Ensure this function is defined and returns the correct path
-    file_listA = os.listdir(DATA_PATH + 'training_setA/')
-    file_listB = os.listdir(DATA_PATH + 'training_setB/')
+    file_listA = list(map(lambda file: DATA_PATH + 'training_setA/' + file, os.listdir(DATA_PATH + 'training_setA/'))) 
+    file_listB = list(map(lambda file: DATA_PATH + 'training_setB/' + file, os.listdir(DATA_PATH + 'training_setB/'))) 
+    file_list = file_listA + file_listB
+    total_files = len(file_list)
 
-    for file in file_listA:
-        df = pd.read_csv(DATA_PATH + 'training_setA/' + file, na_values=['NA', 'na', ''])
-        data.append(df)
-        print("  ", c, end='\r')
-        c += 1
+    if files == -1:
+        files = total_files
 
-    for file in file_listB:
-        df = pd.read_csv(DATA_PATH + 'training_setB/' + file, na_values=['NA', 'na', ''])
-        data.append(df)
-        print("  ", c, end='\r')
-        c += 1
-    print("  ", c)
+    files = min(files, total_files)
 
-    print("Combining data into a single DataFrame and converting to numpy array...")
-    # print(data.shape)
-    combined_df = pd.concat(data)
-    print(combined_df.shape)
-    # Ensure the data is numeric and convert to float
-    numeric_df = combined_df.apply(pd.to_numeric, errors='coerce')
-    dataset = numeric_df.astype(float).to_numpy()
+    dataset = np.array([])
 
-    if not include_strings:
-        dataset = preprocess_no_strings(combined_df)
+    print("Loading dataset...")
+    with tqdm(total=files) as progress_bar:
+        for file in file_list[:files]:
+            file_data = np.genfromtxt(file, delimiter='|', skip_header=1, missing_values=['NA', 'na', ''], filling_values=np.nan)
+            
+            
+            if len(dataset) == 0:
+                if concat_files:
+                    dataset = file_data
+                else:
+                    dataset = [file_data]
+            else:
+                if concat_files:
+                    dataset = np.vstack([dataset, file_data])
+                else:
+                    dataset.append(file_data)
+                
+            progress_bar.update(1)
 
-    print("Done")
-    return dataset
+    print("Done.")
+   
+    return dataset, np.genfromtxt(file_list[0], delimiter='|', dtype=str, max_rows=1)
+
 
 def get_dataset():
     data = []
